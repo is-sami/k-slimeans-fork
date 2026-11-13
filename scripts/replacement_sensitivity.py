@@ -162,7 +162,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("run_dirs", nargs="+", metavar="RUN_DIR")
     parser.add_argument("--cache-dir", required=True)
-    parser.add_argument("--summary-embeddings", required=True)
+    parser.add_argument("--summary-embeddings", required=True, nargs="+")
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
     parser.add_argument("--steps", type=int, nargs="+", default=[1, 3, 5], help="1-based summary steps")
@@ -173,7 +173,7 @@ def main() -> None:
     df = run(
         args.run_dirs,
         args.cache_dir,
-        SummaryEmbeddings.load(args.summary_embeddings),
+        SummaryEmbeddings.load_many(args.summary_embeddings),
         set(args.seeds),
         args.steps,
         args.draws,

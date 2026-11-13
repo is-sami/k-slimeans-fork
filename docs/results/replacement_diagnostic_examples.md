@@ -18,3 +18,11 @@ Clusters [13, 46, 56, 75, 76, 112] share the summary: "What is the summary of th
 - "remind me in (x) hours" (gold 122, cluster 112 -> 8, neutral); new cluster's summary: "What is your age?"
 - "let me know in 15 minutes please" (gold 122, cluster 112 -> 5, neutral); new cluster's summary: "How can I change the name I am addressed by?"
 
+### clinc150_v2_qwen3-4b seed 0 step 1
+
+Clusters [51, 102] share the summary: "How can I transfer money between different bank accounts?"
+
+- "i need $20000 transferred from my savings to my checking" (gold 130, cluster 51 -> 97, neutral); new cluster's summary: "how do i set up direct deposit for my paycheck"
+- "complete a transaction from savings to checking of $20000" (gold 130, cluster 51 -> 1, neutral); new cluster's summary: "Can you help me with checking my account balance and recent transactions?"
+- "transfer $20000 from my savings account to checking account" (gold 130, cluster 51 -> 1, neutral); new cluster's summary: "Can you help me with checking my account balance and recent transactions?"
+

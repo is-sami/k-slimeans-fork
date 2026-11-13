@@ -1,6 +1,6 @@
 # What happens when a summary replaces a centroid: the replacement diagnostic on CLINC150
 
-Issue #33. Preliminary: five seeds, one dataset, one encoder. **The replay is exact: with the logged summaries re-embedded on the GPU, as in the original runs, all 120 fits (4 runs, 5 seeds, step 0 and 5 summary steps) reproduce the logged partitions with 0 label mismatches (Section 2).** An earlier version of this write-up replayed from CPU-encoded summaries, which did not reproduce the 4B's blocks; that difference is confirmed to be encoder noise and is kept in Section 2 as a result in its own right. Measurement and explanation are kept apart: Sections 3 to 7 report what was measured, Section 8 lists what is and is not concluded. No causal claim is made here; testing causes is #47.
+Issue #33, extended by #46 (Section 8). Preliminary: five seeds, one dataset, one encoder. Sections 1 to 7 and 9 describe the four #31 runs; Section 8 adds the Qwen3-4B under the clearer prompt (v2), and the 0.6B and 1.7B under that prompt are still queued and will be added the same way. **The replay is exact: with the logged summaries re-embedded on the GPU, as in the original runs, all 120 fits (4 runs, 5 seeds, step 0 and 5 summary steps) reproduce the logged partitions with 0 label mismatches, and so do the 30 fits of the v2 4B run (Section 2).** An earlier version of this write-up replayed from CPU-encoded summaries, which did not reproduce the 4B's blocks; that difference is confirmed to be encoder noise and is kept in Section 2 as a result in its own right. Measurement and explanation are kept apart: Sections 3 to 8 report what was measured, Section 9 lists what is and is not concluded. No causal claim is made here; testing causes is #47.
 
 ## 1. What was measured and how
 
@@ -19,7 +19,7 @@ The measures are in `kslimeans.diagnostic` (definitions in its docstring). The o
 
 Committed outputs (`docs/results/`, prefix `replacement_diagnostic_`): `verification.csv`/`.md`, `mechanism.csv`, `steps.csv` (one row per method, seed and step), `iterations.csv` (per iteration, replay and counterfactual), `outcome.csv`, `sensitivity.csv`, `sensitivity_summary.csv`/`.md`, `tables.md` (all tables, including the pooled-over-steps ones), `examples.md`, and the two figures.
 
-**Not committed, regenerate:** the per-cluster file `replacement_diagnostic_clusters.csv` (one row per method, seed, step and cluster; key `run, method, seed, step, cluster`), `replacement_diagnostic_stale.csv` (same key) and the per-point mover files are written to the gitignored `results/replacement_diagnostic/`. #34 and #50 join on those keys after running the script (commands and runtime in Section 9); they are not in git.
+**Not committed, regenerate:** the per-cluster file `replacement_diagnostic_clusters.csv` (one row per method, seed, step and cluster; key `run, method, seed, step, cluster`), `replacement_diagnostic_stale.csv` (same key) and the per-point mover files are written to the gitignored `results/replacement_diagnostic/`. #34 and #50 join on those keys after running the script (commands and runtime in Section 10); they are not in git.
 
 ## 2. Verification of the replay, and the noise floor
 
@@ -31,8 +31,9 @@ Every fit of every run was compared with the log: replayed labels against `assig
 | clinc150_qwen3-0.6b | k-SLMmeans | 30 | 30 | 0 | 0 | 0 | 3.86e-12 | 1.00e-06 | 1.9.1 |
 | clinc150_qwen3-1.7b | k-SLMmeans | 30 | 30 | 0 | 0 | 0 | 0.00e+00 | 1.07e-06 | 1.9.1 |
 | clinc150_qwen3-4b | k-SLMmeans | 30 | 30 | 0 | 0 | 0 | 1.21e-11 | 1.10e-06 | 1.9.1 |
+| clinc150_v2_qwen3-4b | k-SLMmeans-v2 | 30 | 30 | 0 | 0 | 0 | 0.00e+00 | 1.00e-06 | 1.9.1 |
 
-The summary embeddings used here were computed **on the GPU**, like the original runs (`results/replacement_diagnostic/summary_embeddings_cuda.npz`: NVIDIA RTX 3060, torch 2.14.0+cu130, sentence-transformers 6.0.1, batch size 32; about 20 s). The first version of this analysis used a CPU encode of the same summaries (`summary_embeddings_cpu.npz`, same library versions, `--device cpu`). The two encodes of the 15,000 summary rows differ by a median 1.04e-6 (L2 per row; at most 2.1e-6), and no row is bit-equal.
+The v2 4B row was added with a separate GPU encode of its summaries (`results/v2_embed/summary_embeddings_cuda_v2_4b.npz`, same device and library versions, 25 steps): all 30 fits are exact, 0 label mismatches, the logged `n_iter` in every fit, and the same real-KMeans mechanism check passes for its first seed. The rest of this section describes the four #31 runs. The summary embeddings used for those were computed **on the GPU**, like the original runs (`results/replacement_diagnostic/summary_embeddings_cuda.npz`: NVIDIA RTX 3060, torch 2.14.0+cu130, sentence-transformers 6.0.1, batch size 32; about 20 s). The first version of this analysis used a CPU encode of the same summaries (`summary_embeddings_cpu.npz`, same library versions, `--device cpu`). The two encodes of the 15,000 summary rows differ by a median 1.04e-6 (L2 per row; at most 2.1e-6), and no row is bit-equal.
 
 - **Step 0 is exact** for all 20 (method, seed) pairs (0 label mismatches, same `n_iter`), and the number of iterations matches the trace in all 120 fits.
 - **The replay mechanism is exact on real data.** From the same start centers the replayed block gives 0 label mismatches and the same `n_iter` as a real `KMeans(init=start, max_iter=20)` fit, for the first seed of every method (`mechanism.csv`; centers differ by at most 3e-8, which is the run-to-run variation of KMeans itself). `tests/test_replay.py` checks it on synthetic data, including empty clusters, identical centers, both stops, a stop on tol, a final summary step with no block, and every iteration prefix.
@@ -259,9 +260,58 @@ Share stale@0.5 by summary step (summary of step j against the partition after i
 - The Jaccard-only shares (0.005, 0.244, 0.231, 0.484 at 0.5) come from logged partitions alone and are the part of this table that does not depend on the replay. The 4B's final summary embedding is nearest to another cluster's final center for 42% of its clusters (LSA 0%, 0.6B 15.5%, 1.7B 21%; computed from the replayed final centers), and the mean Jaccard between the members a summary was written from and the final members is 0.48 (LSA 0.97, 0.6B 0.70, 1.7B 0.71). The share out of date at every step for the 4B is 0.52 to 0.55 (last table).
 - The nearest-center rule (4B) is the part that a re-encode at the 1e-6 level could move (Section 2).
 
-## 8. What can and cannot be said
+## 8. The 4B under the clearer prompt (#46)
 
-Measured: replacing the centroids with these summaries raises the objective by 72% to 98% and Lloyd removes most of it within a couple of iterations; the partition however ends 9% to 45% different from the pre-replacement partition, most for the 4B; the 4B has 6 to 23 times as many duplicate summaries and 9 to 18 times as many emptied clusters at step 1 as the 0.6B and 1.7B, its movers come disproportionately from flagged clusters, and at step 1 its real post-block partition has a lower ACC than the counterfactual in all five seeds (mean -0.016; -0.014 with both sides run to convergence); more than half of its displayed final summaries no longer match their cluster by the convention used here.
+Run `results/clinc150_v2_qwen3-4b/20261112-181256` (clearer prompt, seeds 0-4, the same step-0 partitions as #31, so at step 1 every method starts from the same partition), replayed from its own GPU-encoded summary embeddings with the same code. The replay is exact (30 of 30 fits, 0 label mismatches, Section 2). "Old 4B" is the #31 4B run. The question: with the clearer prompt, does the 4B's replacement step look like the 1.7B's rather than the old 4B's? The 0.6B and 1.7B under the clearer prompt are still queued; they will be added with the same two commands (Section 10), and no number for them is given here. The sensitivity probe (Section 2) was not run for the v2 4B, so its own noise floor is not measured; the floor quoted below is the old 4B's.
+
+### Measured
+
+Step 1, means over seeds (all methods start from the same partition; `tables.md` has all columns and the pooled-over-steps versions):
+
+| measure | 1.7B | old 4B | v2 4B |
+| --- | ---: | ---: | ---: |
+| clusters with a duplicate summary (per seed) | 0.8 | 18.8 | 1.2 |
+| clusters whose summary mentions "cluster" or "summar" | 13.6 | 50.2 | 0 |
+| empty clusters after the replacement | 0.6 | 10.8 | 0.4 |
+| drift, median RMS radii | 1.05 | 1.08 | 0.88 |
+| cosine, summary vs pre center (median) | 0.708 | 0.668 | 0.805 |
+| summary nearest to its own pre center (share) | 0.817 | 0.619 | 0.823 |
+| block-end center from pre center, radii | 0.114 | 0.333 | 0.104 |
+| points moved at the replacement (share) | 0.468 | 0.561 | 0.404 |
+| points moved net over the block (share) | 0.287 | 0.448 | 0.265 |
+| mean Jaccard of end vs pre clusters | 0.652 | 0.473 | 0.679 |
+| movers (count) / toward gold / away (shuffled baseline: toward, away) | 10,520 / 731 / 4,487 (28, 4,711) | 12,620 / 723 / 5,707 (31, 5,931) | 9,095 / 780 / 3,743 (28, 3,908) |
+| flagged clusters, share of points / share of movers | 0.093 / 0.145 | 0.364 / 0.586 | 0.012 / 0.027 |
+| J before | 10,721 | 10,721 | 10,721 |
+| J, old assignment | 23,352 | 25,660 | 20,287 |
+| J, re-assigned | 20,907 | 21,238 | 18,240 |
+| J, end of block | 10,731 | 10,862 | 10,722 |
+| J, counterfactual (no replacement) | 10,712 | 10,712 | 10,712 |
+| J jump at the replacement (`jump_rel`) | 0.95 | 0.981 | 0.701 |
+| logged minus counterfactual ACC, 20 iterations | +0.0106 (0/5 below) | -0.0159 (5/5 below) | +0.0024 (2/5 below) |
+| the same, both sides run to convergence | +0.0121 (0/5) | -0.0138 (5/5) | +0.0033 (2/5) |
+
+Per seed (ACC, logged minus counterfactual, step 1): v2 4B +0.0009, -0.0052, +0.0163, -0.0037, +0.0036. Its NMI and ARI differences at step 1 are +0.0051 and +0.0065 (old 4B +0.0011, -0.0012; 1.7B +0.0076, +0.0177). The v2 4B needs 44.2 iterations to converge after the replacement (1.7B 48.4, old 4B 52.8, counterfactual 15.2).
+
+Over steps (all five steps pooled, replayed; counts over 5 seeds and 5 steps):
+
+- Duplicates and flags: 22 duplicate-summary clusters for the v2 4B in total (at most 4 in any seed and step), against 23 for the 1.7B and 422 for the old 4B; 0 clusters mentioning the cluster, against 316 and 1,291. Empty clusters after the replacement: 6 (at most 1 per seed and step), against 12 and 263; `n_reseeded` equals the empty count, as for the other runs.
+- Logged minus counterfactual ACC by step, v2 4B: +0.0024, +0.0066, +0.0056, -0.0003, +0.0024 for steps 1 to 5 (1.7B +0.0106, +0.0067, +0.0046, -0.0082, +0.0011; old 4B -0.0159, -0.0120, -0.0123, -0.0040, -0.0074). At step 5 the share of seeds below is 2/5 for the v2 4B, 3/5 for the 1.7B and 4/5 for the old 4B. The v2 4B's mean is above zero at four of five steps. Mean ACC after each block, v2 4B: 0.554, 0.561, 0.567, 0.566, 0.568.
+- Out-of-date final summaries (Section 7 convention, 750 per method): Jaccard below 0.5 for 18.3% (1.7B 23.1%, old 4B 48.4%); stale@0.5 25.2% (30.1%, 54.7%); the final summary's embedding is nearest to another cluster's final center for 16.3% (20.9%, 42.3%); mean Jaccard 0.761 (0.711, 0.484). By step the v2 4B's share stale@0.5 is 0.317, 0.299, 0.263, 0.239, 0.252.
+- Final ACC 0.568 (this is the logged value; the k-means reference columns are not in this run's `outcome.csv`, so the difference to k-means is not computed here).
+
+### What the numbers say, and what they do not
+
+- On every measure above that separates the old 4B from the 1.7B, the v2 4B is on the 1.7B's side (duplicate summaries are about equal: 1.2 against 0.8 per seed at step 1, 22 against 23 over all steps): duplicate summaries, cluster-mentioning summaries, empty clusters, the share of summaries nearest to their own center, the movement of the end-of-block centers, the share of points moved, flagged clusters' share of the movers, and out-of-date summaries. The v2 4B has fewer cluster mentions (0 against 13.6 per step) and a smaller objective jump (0.70 against 0.95) than the 1.7B, and its summaries sit closer to the old centers (drift 0.88 against 1.05).
+- Logged minus counterfactual ACC at step 1 is +0.0024 for the v2 4B, between the old 4B's -0.0159 and the 1.7B's +0.0106. It is not negative in the mean and 3 of 5 seeds are above zero, but it is also not clearly above zero: two seeds are below, and the mean is smaller than the old 4B's noise floor of Section 2 (0.0030 mean, 0.0084 at most), which is the only floor measured. The v2 4B has far fewer tied start centers than the old 4B (1.2 against 18.8 per seed at step 1), so its own floor may well be smaller than the old 4B's, but that was not measured. At step 1 the sign of the v2 4B's difference is therefore not established; the old 4B's deficit (5/5 seeds below, mean -0.0159) is not present.
+- Within this dataset and these five seeds, then: with the clearer prompt the 4B's replacement step has no duplicate collapse and no cluster-mentioning summaries, and its logged-minus-counterfactual ACC is near zero to slightly above, like the 1.7B's and unlike the old 4B's. The 1.7B's difference is larger and in all five seeds above.
+- Not said: that the clearer prompt, rather than other differences between the two runs' summaries, produced this; that the duplicates or the mentions were what lowered the old 4B's ACC (that is #47's question); anything for the 0.6B and 1.7B under the clearer prompt, or for another dataset or encoder.
+
+Old-row note: the v2 rows were added to the committed CSVs; the rows of the four #31 runs are kept as they were (Section 10 gives the one regeneration difference).
+
+## 9. What can and cannot be said
+
+Measured in the #31 runs: replacing the centroids with these summaries raises the objective by 72% to 98% and Lloyd removes most of it within a couple of iterations; the partition however ends 9% to 45% different from the pre-replacement partition, most for the 4B; the 4B has 6 to 23 times as many duplicate summaries and 9 to 18 times as many emptied clusters at step 1 as the 0.6B and 1.7B, its movers come disproportionately from flagged clusters, and at step 1 its real post-block partition has a lower ACC than the counterfactual in all five seeds (mean -0.016; -0.014 with both sides run to convergence); more than half of its displayed final summaries no longer match their cluster by the convention used here.
 
 Not concluded:
 
@@ -271,17 +321,22 @@ Not concluded:
 - Gold direction is measured against the pre-partition majority labels; it does not say whether the post-block partition is better, only the ACC/NMI/ARI columns do.
 - Boundary versus core, the 0.5 Jaccard threshold and the flags are conventions fixed before looking at outcomes (the thresholds 0.3 and 0.7 are reported next to 0.5).
 - BANKING77 is not covered. The #20 runs lack per-step assignments and would need a re-run with #30 logging (about one GPU hour, not yet approved).
+- That the clearer prompt is why the v2 4B differs from the old 4B (Section 8): the two runs differ in the prompt, and in the summaries it produced, and this diagnostic does not separate them. Whether the v2 4B's step-1 replacement is better than the counterfactual is not established either (+0.0024 ACC, 2/5 seeds below).
 - Five seeds, one dataset, one encoder.
 
-## 9. Reproduce
+## 10. Reproduce
 
 ```bash
 # 1. GPU encode of the logged summaries (needs the GPU and the original runs' encoder; about 20 s)
 python scripts/embed_logged_summaries.py RUN_DIR... --cache-dir cache --out results/replacement_diagnostic/summary_embeddings_cuda.npz --device cuda
-# 2. CPU replays with that file
-CUDA_VISIBLE_DEVICES="" python scripts/replacement_diagnostic.py RUN_DIR... --cache-dir cache --summary-embeddings results/replacement_diagnostic/summary_embeddings_cuda.npz --out-dir docs/results
-CUDA_VISIBLE_DEVICES="" python scripts/replacement_sensitivity.py RUN_DIR... --cache-dir cache --summary-embeddings results/replacement_diagnostic/summary_embeddings_cuda.npz --out-dir docs/results
+#    the v2 4B run (#46) has its own file:
+python scripts/embed_logged_summaries.py results/clinc150_v2_qwen3-4b/<stamp> --cache-dir cache --out results/v2_embed/summary_embeddings_cuda_v2_4b.npz --device cuda
+# 2. CPU replays with both files (RUN_DIR... = the four #31 runs and results/clinc150_v2_qwen3-4b/<stamp>)
+CUDA_VISIBLE_DEVICES="" python scripts/replacement_diagnostic.py RUN_DIR... --cache-dir cache --summary-embeddings results/replacement_diagnostic/summary_embeddings_cuda.npz results/v2_embed/summary_embeddings_cuda_v2_4b.npz --out-dir docs/results
+CUDA_VISIBLE_DEVICES="" python scripts/replacement_sensitivity.py RUN_DIR... --cache-dir cache --summary-embeddings results/replacement_diagnostic/summary_embeddings_cuda.npz results/v2_embed/summary_embeddings_cuda_v2_4b.npz --out-dir docs/results
 ```
+
+`--summary-embeddings` takes several files, merged on load; a key present in two files is an error. The sensitivity probe was run for the four #31 runs only (Section 8); the committed sensitivity files do not include the v2 4B. The first replay command takes 20 minutes of CPU on the machine below for the five runs (niced alongside other jobs); the per-iteration, steps, outcome, mechanism and verification CSVs in `docs/results/` keep the rows of the four #31 runs as first committed (regenerating them reproduces those rows to float rounding, below 1e-6 relative in every measure, except one old-4B counterfactual iteration, seed 3 step 5, where one point more or fewer is reassigned in iterations 1 and 2) and add the v2 rows.
 
 Without a GPU, step 1 can be run on the CPU instead (`CUDA_VISIBLE_DEVICES="" python scripts/embed_logged_summaries.py ... --out results/replacement_diagnostic/summary_embeddings_cpu.npz --device cpu`, 2.7 minutes) and the CPU file passed as `--summary-embeddings`. That is the fallback and it costs exactness: with the CPU file 8 of the 4B's 30 fits are exact (29, 26 and 28 of 30 for LSA, 0.6B and 1.7B), so every number from step 2 on, and the 4B's step-1 replayed columns, move by the noise floor of Section 2. `verification.csv` shows which fits reproduce the logs; check it before using a replay.
 

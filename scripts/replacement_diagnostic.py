@@ -398,7 +398,7 @@ def build_tables(frames: dict[str, pd.DataFrame]) -> str:
     return "\n".join(parts)
 
 
-PALETTE = {"lsa": "#0072B2", "qwen3-0.6b": "#E69F00", "qwen3-1.7b": "#009E73", "qwen3-4b": "#D55E00"}
+PALETTE = {"lsa": "#0072B2", "qwen3-0.6b": "#E69F00", "qwen3-1.7b": "#009E73", "qwen3-4b": "#D55E00", "v2_qwen3-4b": "#CC79A7"}
 
 
 def build_figures(frames: dict[str, pd.DataFrame], out: Path) -> None:
@@ -464,13 +464,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("run_dirs", nargs="+", metavar="RUN_DIR")
     parser.add_argument("--cache-dir", required=True)
-    parser.add_argument("--summary-embeddings", required=True, help=".npz from scripts/embed_logged_summaries.py")
+    parser.add_argument("--summary-embeddings", required=True, nargs="+", help=".npz from scripts/embed_logged_summaries.py")
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--work-dir", default="results/replacement_diagnostic", help="gitignored per-point files")
     parser.add_argument("--verify-only", action="store_true", help="write only the verification table")
     args = parser.parse_args()
 
-    embeddings = SummaryEmbeddings.load(args.summary_embeddings)
+    embeddings = SummaryEmbeddings.load_many(args.summary_embeddings)
     print(f"embeddings: {embeddings.meta}", file=sys.stderr)
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)

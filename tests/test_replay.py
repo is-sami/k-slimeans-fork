@@ -284,6 +284,21 @@ def test_summary_embeddings_round_trip(tmp_path):
         loaded.steps("run", "k-SLMmeans", 1)
 
 
+def test_summary_embeddings_load_many_merges_and_rejects_duplicates(tmp_path):
+    def make(run, step, device):
+        path = tmp_path / f"{run}_{step}_{device}.npz"
+        SummaryEmbeddings({(run, "k-SLMmeans", 0, step): np.ones((2, 3), np.float32)}, {"device": device}).save(path)
+        return path
+
+    a, b, dup = make("run_a", 0, "cuda"), make("run_b", 0, "cuda"), make("run_a", 0, "cpu")
+    merged = SummaryEmbeddings.load_many([a, b])
+    assert len(merged.steps("run_a", "k-SLMmeans", 0)) == 1 and len(merged.steps("run_b", "k-SLMmeans", 0)) == 1
+    assert merged.meta == {"sources": [{"device": "cuda"}, {"device": "cuda"}]}
+    assert SummaryEmbeddings.load_many([a]).meta == {"device": "cuda"}
+    with pytest.raises(ValueError, match="already loaded"):
+        SummaryEmbeddings.load_many([a, dup])
+
+
 def test_counterfactual_after_a_block_that_stops_on_tol(data):
     _, X, _ = data
     pre_state, _ = fit_initial(X, K, 3, 0)

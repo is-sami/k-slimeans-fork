@@ -443,3 +443,17 @@ class SummaryEmbeddings:
                     run, method, seed, step = key.rsplit("|", 3)
                     arrays[(run, method, int(seed), int(step))] = data[key]
         return cls(arrays, meta)
+
+    @classmethod
+    def load_many(cls, paths) -> "SummaryEmbeddings":
+        """Merge several files; a key present in two files raises, so a run is never silently replaced."""
+        parts = [cls.load(path) for path in paths]
+        if len(parts) == 1:
+            return parts[0]
+        arrays: dict = {}
+        for path, part in zip(paths, parts):
+            duplicate = arrays.keys() & part.arrays.keys()
+            if duplicate:
+                raise ValueError(f"{path}: {len(duplicate)} keys already loaded from an earlier file, e.g. {min(duplicate)}")
+            arrays.update(part.arrays)
+        return cls(arrays, {"sources": [part.meta for part in parts]})

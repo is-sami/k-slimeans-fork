@@ -8,6 +8,7 @@ Objective (J_before; relative jump at replacement; relative change at block end 
 | qwen3-0.6b | 10,721 | 0.777 | 0.00261 | 0.00345 | 20 |
 | qwen3-1.7b | 10,721 | 0.95 | 0.000989 | 0.00183 | 20 |
 | qwen3-4b | 10,721 | 0.981 | 0.0132 | 0.014 | 20 |
+| v2_qwen3-4b | 10,721 | 0.701 | 8.68e-05 | 0.000926 | 20 |
 
 Centroid movement (per-cluster medians in pre RMS radii, cosine, share whose nearest pre center is its own, distance from summary to block-end center in radii, distance from block-end center to the pre center in radii, fraction by which the block shortens the summary-to-center distance)
 
@@ -17,6 +18,7 @@ Centroid movement (per-cluster medians in pre RMS radii, cosine, share whose nea
 | qwen3-0.6b | 0.965 | 0.754 | 0.825 | 0.964 | 0.161 | 0.000184 |
 | qwen3-1.7b | 1.05 | 0.708 | 0.817 | 1.06 | 0.114 | -0.000253 |
 | qwen3-4b | 1.08 | 0.668 | 0.619 | 1.09 | 0.333 | -0.000238 |
+| v2_qwen3-4b | 0.879 | 0.805 | 0.823 | 0.882 | 0.104 | 0.00063 |
 
 Partition change (fraction of points moved at the replacement and over the block; ARI and mean cluster Jaccard against the pre partition)
 
@@ -26,6 +28,7 @@ Partition change (fraction of points moved at the replacement and over the block
 | qwen3-0.6b | 0.467 | 0.331 | 0.388 | 0.686 | 0.599 |
 | qwen3-1.7b | 0.468 | 0.287 | 0.371 | 0.708 | 0.652 |
 | qwen3-4b | 0.561 | 0.448 | 0.317 | 0.652 | 0.473 |
+| v2_qwen3-4b | 0.404 | 0.265 | 0.449 | 0.716 | 0.679 |
 
 Movers at the replacement (total, counts toward/away from the gold majority and ending in their own gold majority, each beside the mean of a shuffled-destination baseline; share of all points in their own cluster's majority; move rates by margin and flag)
 
@@ -35,6 +38,7 @@ Movers at the replacement (total, counts toward/away from the gold majority and 
 | qwen3-0.6b | 10,502 | 694 | 26.5 | 4,666 | 4,875 | 937 | 61.5 | 0.578 | 0.731 | 0.379 | 0.849 | 0.427 | 0.172 | 0.0953 |
 | qwen3-1.7b | 10,520 | 731 | 28.2 | 4,487 | 4,711 | 985 | 57.5 | 0.578 | 0.747 | 0.374 | 0.725 | 0.441 | 0.145 | 0.0933 |
 | qwen3-4b | 12,620 | 723 | 30.5 | 5,707 | 5,931 | 978 | 60.2 | 0.578 | 0.802 | 0.481 | 0.904 | 0.364 | 0.586 | 0.364 |
+| v2_qwen3-4b | 9,095 | 780 | 27.7 | 3,743 | 3,908 | 975 | 58.3 | 0.578 | 0.696 | 0.307 | 0.928 | 0.398 | 0.0271 | 0.012 |
 
 Duplicates and collapsed centroids (clusters per step)
 
@@ -44,6 +48,7 @@ Duplicates and collapsed centroids (clusters per step)
 | qwen3-0.6b | 3 | 13.6 | 1.2 | 0 | 1.2 |
 | qwen3-1.7b | 0.8 | 13.6 | 0.6 | 0 | 0.6 |
 | qwen3-4b | 18.8 | 50.2 | 10.8 | 0 | 10.8 |
+| v2_qwen3-4b | 1.2 | 0 | 0.4 | 0 | 0.4 |
 
 ### All five steps pooled (replayed; from step 2 on the previous block is replayed too): means over seeds
 
@@ -55,15 +60,17 @@ Objective (J_before; relative jump at replacement; relative change at block end 
 | qwen3-0.6b | 10,725 | 0.78 | 0.00012 | 0.00133 | 20 |
 | qwen3-1.7b | 10,713 | 0.964 | -0.000276 | 0.000776 | 20 |
 | qwen3-4b | 10,842 | 0.979 | 0.00354 | 0.0057 | 20 |
+| v2_qwen3-4b | 10,711 | 0.703 | -0.000188 | 0.000534 | 20 |
 
 Centroid movement (per-cluster medians in pre RMS radii, cosine, share whose nearest pre center is its own, distance from summary to block-end center in radii, distance from block-end center to the pre center in radii, fraction by which the block shortens the summary-to-center distance)
 
 | model | drift_median | cosine_median | own_nearest_share | to_end_radii_median | end_vs_pre_radii_median | pulled_back_median |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | lsa | 0.886 | 0.804 | 0.998 | 0.888 | 0.0228 | -7.29e-07 |
-| qwen3-0.6b | 0.956 | 0.764 | 0.843 | 0.958 | 0.0987 | 6.25e-05 |
+| qwen3-0.6b | 0.956 | 0.764 | 0.843 | 0.958 | 0.0987 | 6.24e-05 |
 | qwen3-1.7b | 1.05 | 0.709 | 0.813 | 1.06 | 0.0758 | -0.000131 |
 | qwen3-4b | 1.09 | 0.662 | 0.606 | 1.1 | 0.284 | -0.000282 |
+| v2_qwen3-4b | 0.872 | 0.811 | 0.832 | 0.874 | 0.0636 | 0.000121 |
 
 Partition change (fraction of points moved at the replacement and over the block; ARI and mean cluster Jaccard against the pre partition)
 
@@ -73,6 +80,7 @@ Partition change (fraction of points moved at the replacement and over the block
 | qwen3-0.6b | 0.438 | 0.277 | 0.405 | 0.731 | 0.665 |
 | qwen3-1.7b | 0.444 | 0.244 | 0.383 | 0.747 | 0.708 |
 | qwen3-4b | 0.537 | 0.414 | 0.336 | 0.69 | 0.489 |
+| v2_qwen3-4b | 0.383 | 0.218 | 0.467 | 0.765 | 0.741 |
 
 Movers at the replacement (total, counts toward/away from the gold majority and ending in their own gold majority, each beside the mean of a shuffled-destination baseline; share of all points in their own cluster's majority; move rates by margin and flag)
 
@@ -82,6 +90,7 @@ Movers at the replacement (total, counts toward/away from the gold majority and 
 | qwen3-0.6b | 9,862 | 648 | 26.7 | 4,422 | 4,547 | 804 | 58.2 | 0.571 | 0.715 | 0.346 | 0.823 | 0.396 | 0.187 | 0.1 |
 | qwen3-1.7b | 9,994 | 690 | 25.6 | 4,394 | 4,575 | 900 | 54.2 | 0.592 | 0.73 | 0.349 | 0.739 | 0.413 | 0.156 | 0.0927 |
 | qwen3-4b | 12,088 | 660 | 29.5 | 5,265 | 5,470 | 896 | 59.6 | 0.556 | 0.785 | 0.454 | 0.886 | 0.333 | 0.608 | 0.369 |
+| v2_qwen3-4b | 8,622 | 745 | 26.9 | 3,481 | 3,610 | 903 | 55.7 | 0.586 | 0.691 | 0.281 | 0.863 | 0.379 | 0.0185 | 0.00778 |
 
 Duplicates and collapsed centroids (clusters per step)
 
@@ -91,6 +100,7 @@ Duplicates and collapsed centroids (clusters per step)
 | qwen3-0.6b | 2 | 12.6 | 0.84 | 0 | 0.84 |
 | qwen3-1.7b | 0.92 | 12.6 | 0.48 | 0 | 0.48 |
 | qwen3-4b | 16.9 | 51.6 | 10.5 | 0 | 10.5 |
+| v2_qwen3-4b | 0.88 | 0 | 0.24 | 0 | 0.24 |
 
 ### Outcome
 
@@ -102,6 +112,7 @@ Duplicates and collapsed centroids (clusters per step)
 | qwen3-0.6b | +0.0016 | +0.0022 | +0.0048 | 3/5 | +0.0016 | 0 |
 | qwen3-1.7b | +0.0106 | +0.0076 | +0.0177 | 0/5 | +0.0106 | 0 |
 | qwen3-4b | -0.0159 | +0.0011 | -0.0012 | 5/5 | -0.0159 | 0 |
+| v2_qwen3-4b | +0.0024 | +0.0051 | +0.0065 | 2/5 | +0.0024 | 0 |
 
 Per seed, step 1, logged partition minus counterfactual.
 
@@ -127,6 +138,11 @@ Per seed, step 1, logged partition minus counterfactual.
 | qwen3-4b | 2 | -0.0128 | +0.0020 | -0.0000 |
 | qwen3-4b | 3 | -0.0212 | -0.0041 | -0.0090 |
 | qwen3-4b | 4 | -0.0087 | +0.0035 | +0.0048 |
+| v2_qwen3-4b | 0 | +0.0009 | +0.0046 | +0.0033 |
+| v2_qwen3-4b | 1 | -0.0052 | +0.0040 | +0.0019 |
+| v2_qwen3-4b | 2 | +0.0163 | +0.0050 | +0.0170 |
+| v2_qwen3-4b | 3 | -0.0037 | +0.0008 | -0.0020 |
+| v2_qwen3-4b | 4 | +0.0036 | +0.0109 | +0.0123 |
 
 **Step 1, both sides run to sklearn's own stop** (cap 300 iterations; replayed from the summary embeddings). A fixed 20-iteration budget can leave the replacement block less converged than the counterfactual (which starts converged), so this separates a worse end state from less convergence. `n_iter` and `n_iter_cf` are mean iterations to the stop, `capped*` the runs that hit the cap, `j_end_rel` the mean relative objective of the replacement run over the counterfactual's, and `d_*` the score differences (replacement minus counterfactual).
 
@@ -136,6 +152,7 @@ Per seed, step 1, logged partition minus counterfactual.
 | qwen3-0.6b | 55.6 | 15.2 | 0 | 0 | +0.0019 | +0.0029 | +0.0031 | +0.0057 | 3/5 |
 | qwen3-1.7b | 48.4 | 15.2 | 0 | 0 | +0.0008 | +0.0121 | +0.0088 | +0.0190 | 0/5 |
 | qwen3-4b | 52.8 | 15.2 | 0 | 0 | +0.0110 | -0.0138 | +0.0026 | +0.0015 | 5/5 |
+| v2_qwen3-4b | 44.2 | 15.2 | 0 | 0 | +0.0002 | +0.0033 | +0.0055 | +0.0070 | 2/5 |
 
 **Per step, replayed.** From step 2 on every row starts from a replayed previous block.
 
@@ -163,6 +180,11 @@ Mean over seeds of (replayed score after the block) minus (score after plain Llo
 | qwen3-4b | 3 | -0.0123 | -0.0053 | -0.0088 |
 | qwen3-4b | 4 | -0.0040 | -0.0017 | -0.0029 |
 | qwen3-4b | 5 | -0.0074 | -0.0039 | -0.0070 |
+| v2_qwen3-4b | 1 | +0.0024 | +0.0051 | +0.0065 |
+| v2_qwen3-4b | 2 | +0.0066 | +0.0036 | +0.0066 |
+| v2_qwen3-4b | 3 | +0.0056 | +0.0023 | +0.0052 |
+| v2_qwen3-4b | 4 | -0.0003 | +0.0009 | +0.0024 |
+| v2_qwen3-4b | 5 | +0.0024 | +0.0002 | -0.0020 |
 
 Final scores against k-means from the same initialization (logged values; mean over seeds).
 
@@ -172,21 +194,22 @@ Final scores against k-means from the same initialization (logged values; mean o
 | qwen3-0.6b | 0.541 | 0.551 | -0.0104 | -0.0009 | -0.0014 |
 | qwen3-1.7b | 0.570 | 0.551 | +0.0184 | +0.0123 | +0.0224 |
 | qwen3-4b | 0.511 | 0.551 | -0.0402 | -0.0086 | -0.0181 |
+| v2_qwen3-4b | 0.568 | n/a | n/a | n/a | n/a |
 
 Spearman correlation across all (model, seed) pairs at step 1; a descriptive number, not a test. The pooled correlation mixes between-model and within-model variation.
 
-| step-1 measure | outcome | spearman (n=20) |
+| step-1 measure | outcome | spearman (n=25) |
 | --- | --- | ---: |
-| jump_rel | d_step_acc | -0.32 |
+| jump_rel | d_step_acc | -0.29 |
 | jump_rel | d_final_acc | -0.44 |
 | jump_rel | d_final_nmi | -0.36 |
-| drift_median | d_step_acc | -0.44 |
+| drift_median | d_step_acc | -0.37 |
 | drift_median | d_final_acc | -0.35 |
 | drift_median | d_final_nmi | -0.29 |
-| n_empty_replacement | d_step_acc | -0.51 |
+| n_empty_replacement | d_step_acc | -0.40 |
 | n_empty_replacement | d_final_acc | -0.77 |
 | n_empty_replacement | d_final_nmi | -0.68 |
-| frac_moved_replacement | d_step_acc | -0.55 |
+| frac_moved_replacement | d_step_acc | -0.48 |
 | frac_moved_replacement | d_final_acc | -0.63 |
 | frac_moved_replacement | d_final_nmi | -0.52 |
 
@@ -200,6 +223,7 @@ Share of final summaries that are out of date: Jaccard between the members each 
 | qwen3-0.6b | 750 | 0.699 | 0.18 | 0.244 | 0.351 | 0.155 | 0.236 | 0.287 | 0.387 |
 | qwen3-1.7b | 750 | 0.711 | 0.159 | 0.231 | 0.325 | 0.209 | 0.256 | 0.301 | 0.384 |
 | qwen3-4b | 750 | 0.484 | 0.416 | 0.484 | 0.56 | 0.423 | 0.496 | 0.547 | 0.597 |
+| v2_qwen3-4b | 750 | 0.761 | 0.113 | 0.183 | 0.276 | 0.163 | 0.205 | 0.252 | 0.325 |
 
 Share stale@0.5 by summary step (summary of step j against the partition after its own block).
 
@@ -209,3 +233,4 @@ Share stale@0.5 by summary step (summary of step j against the partition after i
 | qwen3-0.6b | 0.381 | 0.345 | 0.301 | 0.283 | 0.287 |
 | qwen3-1.7b | 0.351 | 0.319 | 0.291 | 0.292 | 0.301 |
 | qwen3-4b | 0.525 | 0.517 | 0.552 | 0.519 | 0.547 |
+| v2_qwen3-4b | 0.317 | 0.299 | 0.263 | 0.239 | 0.252 |
