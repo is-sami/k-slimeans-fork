@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from typing import Callable, Sequence
 
 import numpy as np
+import pandas as pd
 
 WELL_FROM = 0.5
 POOR_BELOW = 0.25
@@ -233,3 +234,68 @@ def agreement(hand: Sequence[bool], auto: Sequence[bool]) -> dict:
         "raw_agreement": (tp + tn) / n if n else float("nan"),
         "kappa": cohens_kappa([h for h, _ in pairs], [a for _, a in pairs]),
     }
+
+
+def _labels(sheet: pd.DataFrame, name: str) -> pd.Series:
+    """The hand label `name` of every row of a filled sheet (`None` where the cell is empty), indexed by row id."""
+    return pd.Series([hand_label(r, name) for r in sheet.to_dict("records")], index=sheet["row_id"], dtype=object)
+
+
+def compare_with_key(sheet: pd.DataFrame, key: pd.DataFrame) -> pd.DataFrame:
+    """One row per property: the agreement between the hand label and the automatic flag of the key."""
+    merged = sheet.merge(key, on="row_id", how="inner", validate="one_to_one", suffixes=("", "_key"))
+    rows = []
+    for name, flag in HAND_LABELS.items():
+        pairs = [
+            (h, bool(r[flag]))
+            for r in merged.to_dict("records")
+            if (h := hand_label(r, name)) is not None and pd.notna(r[flag])
+        ]
+        rows.append({"property": name, **agreement([h for h, _ in pairs], [a for _, a in pairs])})
+    return pd.DataFrame(rows)
+
+
+def compare_raters(sheet_a: pd.DataFrame, sheet_b: pd.DataFrame) -> pd.DataFrame:
+    """One row per property: the agreement between two raters of the same sheet (rows matched by `row_id`).
+
+    "hand_pos" counts rater A's positive labels and "auto_pos" rater B's; rows either rater left empty are dropped.
+    """
+    rows = []
+    for name in HAND_LABELS:
+        a, b = _labels(sheet_a, name), _labels(sheet_b, name)
+        both = a.index.intersection(b.index)
+        pairs = [(a[i], b[i]) for i in both if a[i] is not None and b[i] is not None]
+        rows.append({"property": name, **agreement([x for x, _ in pairs], [y for _, y in pairs])})
+    return pd.DataFrame(rows)
+
+
+def method_rates(sheet: pd.DataFrame, key: pd.DataFrame) -> pd.DataFrame:
+    """Per method: the summaries, how many each hand label marks and how many the automatic flag marks (counts)."""
+    key = key[["row_id", "method", *HAND_LABELS.values()]]
+    merged = sheet.merge(key, on="row_id", how="inner", validate="one_to_one")
+    rows = []
+    for method, group in merged.groupby("method", sort=True):
+        row = {"method": method, "n": len(group)}
+        for name, flag in HAND_LABELS.items():
+            row[f"{name}_auto"] = int(group[flag].astype(bool).sum())
+            labels = [hand_label(r, name) for r in group.to_dict("records")]
+            row[name] = sum(1 for v in labels if v)
+            row[f"{name}_rated"] = sum(1 for v in labels if v is not None)
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+AGREEMENT_HEADER = [
+    "property", "n", "hand yes", "auto yes", "both", "hand only", "auto only", "neither", "raw agreement", "kappa",
+]  # fmt: skip
+
+
+def agreement_markdown(table: pd.DataFrame, header: Sequence[str] = AGREEMENT_HEADER) -> str:
+    """A markdown table of `compare_with_key` / `compare_raters` rows, with `header` naming the two labellings."""
+    lines = ["| " + " | ".join(header) + " |", "| " + " | ".join(["---"] + ["---:"] * (len(header) - 1)) + " |"]
+    for r in table.itertuples():
+        lines.append(
+            f"| {r.property.replace('_', ' ')} | {r.n} | {r.hand_pos} | {r.auto_pos} | {r.both} | {r.hand_only} "
+            f"| {r.auto_only} | {r.neither} | {r.raw_agreement:.2f} | {r.kappa:.2f} |"
+        )
+    return "\n".join(lines)

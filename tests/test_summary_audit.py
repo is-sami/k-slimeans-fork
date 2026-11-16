@@ -14,9 +14,11 @@ from kslimeans.summary_audit import (
     agreement,
     build_audit,
     cohens_kappa,
+    compare_raters,
     hand_label,
     intent_scores,
     matched_cluster,
+    method_rates,
     recovery_class,
     sample_items,
 )
@@ -175,3 +177,74 @@ def test_an_intent_sharing_a_matched_cluster_with_an_earlier_item_is_skipped():
     _, key = build_audit("toy", texts, gold, None, parts, 0, 3, (("mixed", 2), ("well", 2)))
     assert len({(k["method"], k["cluster"]) for k in key}) == len(key)
     assert len(key) == 2  # intents 0/1 share a cluster (one kept), intent 2 is recovered perfectly
+
+
+def toy_sheet(fit, generic, unsupported, fluent) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "row_id": ["d-01-A", "d-01-B", "d-01-C", "d-01-D"],
+            "members_shown": [10] * 4,
+            "members_fit": fit,
+            "generic": generic,
+            "unsupported": unsupported,
+            "fluent": fluent,
+        }
+    )
+
+
+TOY_KEY = pd.DataFrame(
+    {
+        "row_id": ["d-01-A", "d-01-B", "d-01-C", "d-01-D"],
+        "method": ["m1", "m2", "m1", "m2"],
+        "flag_low_coverage": [False, True, True, False],
+        "flag_generic": [False, True, False, False],
+        "flag_unsupported": [False, False, True, False],
+        "flag_not_fluent": [False, False, True, True],
+    }
+)
+
+
+def test_compare_raters_counts_and_drops_rows_either_rater_left_empty():
+    a = toy_sheet([9, 2, 8, 1], [0, 1, 0, 1], [0, 0, 1, 0], [1, 1, 0, 1])
+    b = toy_sheet([9, 2, 3, 8], [0, 1, 0, 1], [0, 0, 1, ""], [1, 1, 0, 1])  # b: C low coverage too; D unrated
+    table = compare_raters(a, b).set_index("property")
+    # low coverage: a marks B, D; b marks B, C -> both 1, a only 1, b only 1, neither 1
+    assert table.loc["low_coverage", ["n", "both", "hand_only", "auto_only", "neither"]].tolist() == [4, 1, 1, 1, 1]
+    assert table.loc["generic", "kappa"] == 1.0
+    assert table.loc["unsupported", "n"] == 3
+    assert table.loc["not_fluent", "hand_pos"] == 1 and table.loc["not_fluent", "auto_pos"] == 1
+
+
+def test_compare_raters_kappa_when_a_rater_never_marks():
+    a = toy_sheet([9] * 4, [0, 0, 0, 1], [0] * 4, [1] * 4)
+    b = toy_sheet([9] * 4, [0] * 4, [0] * 4, [1] * 4)
+    table = compare_raters(a, b).set_index("property")
+    assert table.loc["generic", "raw_agreement"] == 0.75 and table.loc["generic", "kappa"] == 0.0
+    assert np.isnan(table.loc["unsupported", "kappa"])  # neither rater marks: chance agreement is already 1
+
+
+def test_method_rates_counts_hand_and_automatic_marks_per_method():
+    sheet = toy_sheet([9, 2, 8, 1], [0, 1, 0, 1], [0, 0, 1, ""], [1, 1, 0, 1])
+    rates = method_rates(sheet, TOY_KEY).set_index("method")
+    m1 = rates.loc["m1", ["n", "low_coverage", "low_coverage_auto", "unsupported", "unsupported_auto"]]
+    assert m1.tolist() == [2, 0, 1, 1, 1]
+    assert rates.loc["m2", ["low_coverage", "generic", "generic_auto"]].tolist() == [2, 2, 1]
+    assert rates.loc["m2", "unsupported_rated"] == 1  # the unrated cell is not counted as rated
+
+
+def test_audit_ai_report_script_writes_every_section(tmp_path):
+    script = load_script("audit_ai_report")
+    sheets, keys = tmp_path / "sheets", tmp_path / "keys"
+    sheets.mkdir(), keys.mkdir()
+    for dataset in script.DATASETS:
+        TOY_KEY.to_csv(keys / f"summary_audit_key_{dataset}.csv", index=False)
+        for rater in script.RATERS:
+            toy_sheet([9, 2, 8, 1], [0, 1, 0, 1], [0, 0, 1, 0], [1, 1, 0, 1]).to_csv(
+                sheets / f"summary_audit_ai_rater_{rater}_{dataset}.csv", index=False
+            )
+    text = script.report(sheets, keys)
+    headings = ("## clinc150_intent", "## bank77", "### Rater 1 against rater 2",
+                "### Rater 2 against the automatic flags", "### Automatic flags on the same summaries")  # fmt: skip
+    for heading in headings:
+        assert heading in text
+    assert "| m1 | 0/2 | 0/2 | 1/2 | 1/2 |" in text and "| low coverage | 4 |" in text
