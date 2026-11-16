@@ -5,6 +5,8 @@ examples already in `docs/results/prelim_bank77.md` section 6.) One rater; the a
 reported. The key files (`summary_audit_key_*.csv`) are not in the repo; do not generate them (`make_audit_sheet.py
 --write-key`) until the rating is done: the sheet hides which method wrote which summary.
 
+(2026-11-16: as a stand-in until the human rating is done, two AI raters rated copies of the sheets and the keys were generated locally to score them; see `docs/results/summary_quality.md` section 5. The human hand check is still one rater, rating the blank sheets without the keys.)
+
 ## What you get
 
 `docs/results/summary_audit_sheet_<dataset>.csv` (and a `.md` copy for reading). Each row is one summary with
