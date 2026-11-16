@@ -234,7 +234,7 @@ Per-seed means ± standard deviation, from the per-seed cost fields added in #30
 ## 5. Limitations and next steps
 
 - **Preliminary scope:** one model family at three sizes, two datasets, 5 seeds, one prompt per dataset, greedy decoding and the fixed 5-step schedule. The intervals are uncorrected, and several sit close to zero.
-- **Untested explanation:** the 4B explanation in Section 4 is an association from surface counts. No prompt variant was run, so we do not know how the 4B (or the other sizes) would do on CLINC150 with a prompt that asks for a representative question.
+- **Untested explanation:** the 4B explanation in Section 4 is an association from surface counts. No prompt variant was run, so we do not know how the 4B (or the other sizes) would do on CLINC150 with a prompt that asks for a representative question. #46 ran that test afterwards ([`prompt_test.md`](prompt_test.md), Sections 8.6 and 8.7, with the size comparison under both prompts for #36).
 - **No cost-matched comparison.** The timings come from a shared GPU with different batch sizes per model (Section 3).
 - **BANKING77 was not re-run** after #28 and #30. Its logs have a single truncation warning (a lower bound), so #28 probably matters less there than on CLINC150, but this is not measured. Its runs also have no cost or `step0_sha1` logging.
 - **Next, from the professor's feedback (tracker #39):**

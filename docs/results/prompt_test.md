@@ -2,7 +2,7 @@
 
 Issue #46 asks whether part of the Qwen3-4B's lower CLINC150 scores comes from how it reads the prompt (background in
 [`clinc150_summarizers.md`](clinc150_summarizers.md) §2.4 and §4). This file holds the pilot, which needs no clustering
-scores. Section 8 holds the main runs: the 4B under the clearer prompt is in; the 0.6B and 1.7B are still to run.
+scores. Section 8 holds the main runs: all three sizes under the clearer prompt, next to the #31 runs, with the paired differences and what they mean for the size trend (#36).
 
 Everything below comes from outputs that already exist. The pilot's run directories are under `results/` and not
 committed; [`prompt_test_pilot.csv`](prompt_test_pilot.csv) and [`prompt_test_pilot_examples.md`](prompt_test_pilot_examples.md)
@@ -214,10 +214,11 @@ model loaded says idle for all six ("median sample within all thresholds"; media
 
 The idle check says nothing about the CPU job, which the check does not look at.
 
+
 ## 8. Main runs
 
-Seeds 0-4 on the #31 protocol (batch size 1 for the 4B). Only the Qwen3-4B has run under the clearer prompt so far.
-The #31 rows are the old-prompt runs; "k-SLMmeans-v2" marks the clearer prompt.
+Seeds 0-4 on the #31 protocol, with the #31 batch sizes (0.6B 8, 1.7B 4, 4B 1), for all three sizes under the clearer prompt.
+The #31 rows are the old-prompt runs; "k-SLMmeans-v2" marks the clearer prompt. Sizes in the tables below are Qwen3 sizes.
 
 ### 8.1 Results
 
@@ -228,48 +229,85 @@ The #31 rows are the old-prompt runs; "k-SLMmeans-v2" marks the clearer prompt.
 | k-SLMmeans (Qwen3-0.6B) | 0.541 ± 0.013 | 0.747 ± 0.003 | 0.437 ± 0.008 | 903.9 | 5 |
 | k-SLMmeans (Qwen3-1.7B) | 0.570 ± 0.011 | 0.760 ± 0.006 | 0.461 ± 0.012 | 1247.5 | 5 |
 | k-SLMmeans (Qwen3-4B) | 0.511 ± 0.015 | 0.740 ± 0.006 | 0.421 ± 0.010 | 1861.7 | 5 |
+| k-SLMmeans-v2 (Qwen3-0.6B) | 0.563 ± 0.008 | 0.755 ± 0.002 | 0.453 ± 0.006 | 381.1 | 5 |
+| k-SLMmeans-v2 (Qwen3-1.7B) | 0.563 ± 0.007 | 0.754 ± 0.006 | 0.454 ± 0.010 | 744.4 | 5 |
 | k-SLMmeans-v2 (Qwen3-4B) | 0.568 ± 0.010 | 0.760 ± 0.005 | 0.457 ± 0.012 | 1098.8 | 5 |
 
-Mean ± standard deviation over seeds. The s/seed column is not comparable across the old and clearer prompt (Section 8.4).
-The k-means and LSA rows are from the #31 LSA run; neither depends on the prompt.
+Mean ± standard deviation over seeds. The s/seed column is not comparable across the old and clearer prompt, and the v2 1.7B
+figure is not a clean timing at all (Section 8.4). The k-means and LSA rows are from the #31 LSA run; neither depends on the prompt.
 
-**Pending: Qwen3-0.6B and Qwen3-1.7B under the clearer prompt.** They are queued and have not run. No v2 row exists for them,
-and nothing in this file says how the sizes order under the clearer prompt.
+Under the old prompt the means ranged from 0.511 to 0.570 ACC across sizes. Under the clearer prompt they range from 0.563 to 0.568.
 
 ### 8.2 Paired differences
 
 Same seed, same step-0 partition, difference per seed, 95% t-interval over the 5 seeds (df = 4). "Wins" is the number of seeds
-with a difference above 0. The full tables (every method against the old 4B, k-means, LSA and the old 1.7B) are in
-[`prompt_test_paired.md`](prompt_test_paired.md) and [`prompt_test_paired.csv`](prompt_test_paired.csv). They will be
-regenerated with all sizes once the 0.6B and 1.7B run under the clearer prompt. The rows below are copied from them.
+with a difference above 0. Every method is paired against every other in [`prompt_test_paired.md`](prompt_test_paired.md) and
+[`prompt_test_paired.csv`](prompt_test_paired.csv); the rows below are copied from them. The intervals are not corrected for the
+many comparisons, and several sit close to 0.
 
-| Comparison (first minus second) | ACC | NMI | ARI |
+**Clearer prompt against the old prompt, same size** (v2 minus old):
+
+| Size | ACC | NMI | ARI |
 | --- | --- | --- | --- |
-| v2 4B minus old 4B | +0.056 [+0.039, +0.074], 5/5 | +0.021 [+0.013, +0.029], 5/5 | +0.036 [+0.019, +0.053], 5/5 |
-| v2 4B minus k-means | +0.016 [+0.009, +0.023], 5/5 | +0.012 [+0.007, +0.017], 5/5 | +0.018 [+0.007, +0.029], 5/5 |
-| v2 4B minus LSA | +0.007 [-0.001, +0.016], 5/5 | +0.008 [+0.002, +0.014], 5/5 | +0.008 [-0.002, +0.017], 4/5 |
-| v2 4B minus old 1.7B | -0.002 [-0.021, +0.017], 2/5 | -0.000 [-0.007, +0.007], 2/5 | -0.005 [-0.023, +0.014], 2/5 |
-| old 4B minus k-means (from #31) | -0.040 [-0.058, -0.022], 0/5 | -0.009 [-0.017, -0.000], 0/5 | -0.018 [-0.027, -0.009], 0/5 |
-| old 1.7B minus k-means (from #31) | +0.018 [+0.004, +0.033], 4/5 | +0.012 [+0.005, +0.019], 5/5 | +0.022 [+0.011, +0.034], 5/5 |
+| 0.6B | +0.022 [+0.010, +0.033], 5/5 | +0.008 [+0.004, +0.012], 5/5 | +0.016 [+0.005, +0.027], 5/5 |
+| 1.7B | -0.007 [-0.023, +0.010], 1/5 | -0.006 [-0.016, +0.003], 1/5 | -0.008 [-0.025, +0.010], 1/5 |
+| 4B | +0.056 [+0.039, +0.074], 5/5 | +0.021 [+0.013, +0.029], 5/5 | +0.036 [+0.019, +0.053], 5/5 |
 
-- Under the clearer prompt the 4B is above k-means in ACC on 5 of 5 seeds, by 0.016. Under the old prompt it was below
-  k-means on 5 of 5 seeds, by 0.040.
-- The 4B against LSA: the ACC and ARI intervals include 0 (NMI does not). With 5 seeds this does not separate the two.
-- The 4B against the old-prompt 1.7B: the interval is wide, [-0.021, +0.017] in ACC, and the sign changes by seed.
-  The data do not tell the two apart. That is a comparison with an old-prompt run, not a v2 size comparison.
+**Clearer prompt against k-means and LSA** (v2 minus reference):
 
-**What was checked before pairing.** The pairing needs the v2 4B and the #31 runs to differ only in the prompt and to start
-from the same step-0 partition.
+| Size | Reference | ACC | NMI | ARI |
+| --- | --- | --- | --- | --- |
+| 0.6B | k-means | +0.011 [+0.005, +0.017], 5/5 | +0.007 [+0.005, +0.008], 5/5 | +0.014 [+0.008, +0.021], 5/5 |
+| 1.7B | k-means | +0.012 [+0.005, +0.018], 5/5 | +0.006 [+0.001, +0.011], 5/5 | +0.015 [+0.005, +0.025], 5/5 |
+| 4B | k-means | +0.016 [+0.009, +0.023], 5/5 | +0.012 [+0.007, +0.017], 5/5 | +0.018 [+0.007, +0.029], 5/5 |
+| 0.6B | LSA | +0.002 [-0.006, +0.010], 3/5 | +0.002 [-0.000, +0.005], 4/5 | +0.004 [-0.004, +0.012], 3/5 |
+| 1.7B | LSA | +0.003 [-0.003, +0.008], 3/5 | +0.002 [-0.004, +0.007], 3/5 | +0.004 [-0.006, +0.015], 3/5 |
+| 4B | LSA | +0.007 [-0.001, +0.016], 5/5 | +0.008 [+0.002, +0.014], 5/5 | +0.008 [-0.002, +0.017], 4/5 |
 
-- Config: `diff` of the `config.yaml` saved in the two 4B run directories shows four differences. `name` and `method_name`
-  (labels), the added `summarizer.prompt`, and the added `gpu_check` policy (the monitor, no effect on results). The old
-  config also lists `baselines: kmeans` (the k-means row, not rerun here). Model, batch size (1), `max_new_tokens`,
-  `max_input_tokens`, schedule, `tol`, seeds, embedder and dataset are identical.
-- Step-0 partition: `step0_sha1` (a hash of the step-0 labels) is identical per seed in the v2 4B run and in every #31 run
-  (seeds 0-4: 2b3858a9, 41db4cd8, 4f942754, 142872d5, f74393e0, re-checked against the `metrics.jsonl` of the v2 and old 4B runs and the guarded 4B run; the paired script's own check agrees). The step-0
-  `inertia` in `trace.jsonl` agrees between the v2 4B and the old 4B for all five seeds to float32 rounding (seeds 1-3 differ
-  by 0.001 in about 10,700). The k-means row is the same in all #31 runs (ACC 0.5473, 0.5600, 0.5569, 0.5495, 0.5437).
-- Code revision: the old 4B ran at git 8222515 and the v2 4B at 341e420 (`environment.json`, clean tree in both). The changes in
+**Size order under the clearer prompt** (larger v2 size minus smaller v2 size):
+
+| Comparison | ACC | NMI | ARI |
+| --- | --- | --- | --- |
+| 1.7B minus 0.6B | +0.000 [-0.002, +0.003], 4/5 | -0.001 [-0.006, +0.004], 3/5 | +0.000 [-0.008, +0.009], 3/5 |
+| 4B minus 0.6B | +0.005 [-0.002, +0.012], 4/5 | +0.006 [+0.000, +0.011], 4/5 | +0.004 [-0.005, +0.013], 3/5 |
+| 4B minus 1.7B | +0.005 [-0.003, +0.012], 4/5 | +0.006 [+0.002, +0.011], 5/5 | +0.003 [-0.003, +0.010], 3/5 |
+
+For comparison, the same table under the old prompt (old larger minus old smaller, from the same file):
+
+| Comparison | ACC | NMI | ARI |
+| --- | --- | --- | --- |
+| 1.7B minus 0.6B | +0.029 [+0.009, +0.048], 5/5 | +0.013 [+0.009, +0.017], 5/5 | +0.024 [+0.015, +0.033], 5/5 |
+| 4B minus 0.6B | -0.030 [-0.051, -0.008], 0/5 | -0.008 [-0.015, -0.001], 1/5 | -0.017 [-0.029, -0.004], 0/5 |
+| 4B minus 1.7B | -0.059 [-0.072, -0.045], 0/5 | -0.021 [-0.027, -0.015], 0/5 | -0.040 [-0.053, -0.028], 0/5 |
+
+- **0.6B.** The clearer prompt raises ACC by 0.022 on all 5 seeds, and NMI and ARI move the same way. The old 0.6B was
+  below k-means and LSA on ACC; the v2 0.6B is above k-means and level with LSA.
+- **1.7B.** The change is -0.007 ACC [-0.023, +0.010], higher on 1 of 5 seeds, and the NMI and ARI intervals include 0 too.
+  The data do not say whether the clearer prompt helped or hurt the 1.7B. The point estimate is slightly negative and the
+  interval is about 0.03 wide. It is not called "worse".
+- **4B.** Higher by 0.056 on 5 of 5 seeds, as before.
+- **Against k-means** all three v2 sizes are above on all three metrics with intervals that exclude 0, by 0.011 to 0.016 ACC.
+  Under the old prompt that held only for the 1.7B (+0.018 [+0.004, +0.033]).
+- **Against LSA** no v2 size is separated on ACC or ARI (all intervals include 0). Only the 4B's NMI interval excludes 0
+  (+0.008 [+0.002, +0.014]); the 0.6B's NMI interval ends at -0.000.
+- **Size order under the clearer prompt.** On ACC and ARI no pair of sizes is separated: all six intervals include 0, and
+  the means are 0.563, 0.563 and 0.568. On NMI the 4B is ahead of the 0.6B and the 1.7B by 0.006 (lower bounds +0.000 and +0.002).
+  That is a small difference, in one of three metrics, on 5 seeds, among nine uncorrected intervals, and it does not
+  separate the 0.6B from the 1.7B. It is not read as an order. Under the old prompt every pair was separated on all three
+  metrics (the 4B against the 0.6B on NMI only just, upper bound -0.001): the 1.7B was above the 0.6B, and the 4B was below both.
+
+**What was checked before pairing.** The pairing needs each v2 run and its #31 run to differ only in the prompt and to start
+from the same step-0 partition. This was checked for all three sizes.
+
+- Config: `diff` of the `config.yaml` saved in each v2 run directory against its old counterpart shows the same four
+  differences at every size. `name` and `method_name` (labels), the added `summarizer.prompt`, and the added `gpu_check` policy
+  (the monitor, no effect on results). The old configs also list `baselines: kmeans` (the k-means row, not rerun here).
+  Model, batch size (0.6B 8, 1.7B 4, 4B 1), `max_new_tokens`, `max_input_tokens`, schedule, `tol`, seeds, embedder and dataset are identical.
+- Step-0 partition: `step0_sha1` (a hash of the step-0 labels) is identical per seed between each v2 run and its old run, and across all
+  sizes (seeds 0-4: 2b3858a9, 41db4cd8, 4f942754, 142872d5, f74393e0; the paired script's own check agrees, "step0_sha1 shared across all methods for seeds 0-4: yes").
+  The step-0 `inertia` in `trace.jsonl` agrees between each v2 run and its old run for all five seeds to float32 rounding (largest
+  difference 0.001 in about 10,700, at every size). The k-means row is the same in all #31 runs (ACC 0.5473, 0.5600, 0.5569, 0.5495, 0.5437).
+- Code revision: the old runs ran at git 8222515 and the three v2 runs at 341e420 (`environment.json`, clean tree in all six). The changes in
   `src` between them are meant to be behavior-neutral at default settings (summary guard off, `max_words_per_text` None).
   Evidence for that: Section 4 shows this code regenerates the old-prompt logged summaries exactly (150 of 150 at every size),
   and `step0_sha1` and the step-0 inertia match. It is not a proof for later steps.
@@ -282,99 +320,157 @@ from the same step-0 partition.
 From `scripts/surface_counts.py`, pooled over the 5 seeds and 5 summary steps (750 summaries per step set, 3,750 per run), with the
 rules of Section 1 and of `clinc150_summarizers.md` §2.4. The table is in [`prompt_test_surface.md`](prompt_test_surface.md).
 
-| Run | Summaries | Mean words | End with "?" | Mention the cluster | Final step: mention | Final step: clusters in an identical-summary group, per seed | Largest group |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| v2 4B | 3,750 | 10.9 | 2,300 (61%) | 0 (0%) | 0/750 | 0-2 | 2 |
-| old 4B | 3,750 | 17.7 | 3,205 (85%) | 1,291 (34%) | 272/750 | 16-21 | 13 |
-| old 1.7B | 3,750 | 21.0 | 3,623 (97%) | 316 (8%) | 68/750 | 0-4 | 2 |
-| old 0.6B | 3,750 | 11.2 | 3,301 (88%) | 314 (8%) | 69/750 | 0-5 | 3 |
+| Run | Summaries | Mean words | End with "?" | Mention the cluster | Final step: mention | Final step: clusters in an identical-summary group, per seed | Largest group | Start with a quote mark |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| v2 4B | 3,750 | 10.9 | 2,300 (61%) | 0 (0%) | 0/750 | 0-2 | 2 | 0 |
+| v2 1.7B | 3,750 | 13.5 | 3,706 (99%) | 0 (0%) | 0/750 | 0 | 0 | 0 |
+| v2 0.6B | 3,750 | 8.7 | 3,452 (92%) | 0 (0%) | 0/750 | 0 | 0 | 13 |
+| old 4B | 3,750 | 17.7 | 3,205 (85%) | 1,291 (34%) | 272/750 | 16-21 | 13 | 25 |
+| old 1.7B | 3,750 | 21.0 | 3,623 (97%) | 316 (8%) | 68/750 | 0-4 | 2 | 0 |
+| old 0.6B | 3,750 | 11.2 | 3,301 (88%) | 314 (8%) | 69/750 | 0-5 | 3 | 2 |
 
-- The pilot's result holds over the whole run: no summary of the v2 4B mentions the cluster, against 34% under the old
-  prompt, and the final-step identical-summary groups go from 16-21 clusters per seed to 0-2.
-- The 4B's share ending in "?" is 61% (old 85%), below the pilot's 65% at step 1. Summaries are shorter: 10.9 words against
-  17.7. The pilot (Section 6) found that the "?"-less ones are lowercase copies of the users' style; the full run was not
-  read for this.
-- The old 1.7B and 0.6B counts are the #31 ones. The v2 counts for those sizes are pending.
-- Starting with a quote mark: 0 for the v2 4B, 25 for the old 4B. No `<think>` text in any run.
+- The pilot's result holds over the whole run at every size: no v2 summary mentions the cluster, against 34% (4B) and 8% (1.7B,
+  0.6B) under the old prompt. The 4B's final-step identical-summary groups go from 16-21 clusters per seed to 0-2, and the
+  other two sizes have none at the final step.
+- Summaries are shorter at the 4B and 1.7B (10.9 against 17.7 and 13.5 against 21.0 words) and a little shorter at the 0.6B (8.7 against 11.2).
+  The sizes are also closer to each other: 8.7 to 13.5 words under the clearer prompt, 11.2 to 21.0 under the old one.
+- The 4B's share ending in "?" is 61% (old 85%), below the pilot's 65% at step 1. The pilot (Section 6) found that the "?"-less ones
+  are lowercase copies of the users' style; the full run was not read for this. The 1.7B and 0.6B share barely moves (99% and 92%).
+- The 0.6B has 13 summaries starting with a quote mark under the clearer prompt, against 2 under the old one. This is
+  small (0.3%), and the quote handling of #36 question 3 is not looked at here. No `<think>` text in any run.
+- These are counts of form. They say the clearer prompt removed the cluster-talk and duplicate failure, not that the summaries represent their clusters better.
 
 ### 8.4 Cost
 
-From `--cost-md` ([`prompt_test_cost.md`](prompt_test_cost.md), the two 4B rows here; the file has all rows); mean ± std over seeds.
+From `--cost-md` ([`prompt_test_cost.md`](prompt_test_cost.md), the six SLM rows here; the file has all rows); mean ± std over seeds.
 
 | Run | Calls | Input tokens | Output tokens | Summarizer s | Total s | Truncated clusters | Dropped texts |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| old 0.6B | 707 ± 7 | 1,113,037 ± 8,773 | 10,227 ± 211 | 895.8 ± 29.7 | 903.9 ± 29.6 | 6.6 ± 3.5 | 173.0 ± 147.1 |
+| v2 0.6B | 689 ± 2 | 1,120,788 ± 8,825 | 7,806 ± 79 | 373.4 ± 8.5 | 381.1 ± 8.3 | 5.2 ± 2.8 | 167.4 ± 102.9 |
+| old 1.7B | 702 ± 6 | 1,101,755 ± 11,449 | 18,288 ± 387 | 1238.6 ± 102.5 | 1247.5 ± 103.4 | 6.8 ± 2.4 | 304.0 ± 42.8 |
+| v2 1.7B | 701 ± 6 | 1,137,714 ± 3,013 | 11,239 ± 47 | 737.0 ± 198.1 | 744.4 ± 199.3 | 4.2 ± 2.4 | 113.8 ± 63.0 |
 | old 4B | 714 ± 6 | 1,120,190 ± 7,604 | 15,620 ± 463 | 1855.0 ± 188.6 | 1861.7 ± 189.8 | 10.2 ± 3.4 | 502.4 ± 264.2 |
 | v2 4B | 698 ± 10 | 1,131,772 ± 11,868 | 9,068 ± 185 | 1093.7 ± 20.7 | 1098.8 ± 20.6 | 3.8 ± 2.2 | 86.2 ± 69.0 |
 
-- **Do not read the drop from 1862 to 1099 s/seed as an effect of the prompt.** The #31 timings were inflated about 1.7 times by another process on
+- **Do not read the drop in s/seed as an effect of the prompt.** The #31 timings were inflated about 1.7 times by another process on
   the card (see `clinc150_summarizers.md`, Section 3 and its summary line on cost, the header of `scripts/run_clinc150_prompt_v2.sh`, and #35).
-  The v2 run was idle-checked before start (`gpu.json`: idle, median sample within all thresholds). The queue ran nothing
-  else during it: the guard run ended 18:12:18, the v2 4B ran 18:12:38-19:44:35 and the next job began 19:44:56. The in-run
-  monitor in `gpu.json` is stronger than the start check: the largest estimated foreign GPU memory over 1,092 samples was
-  1,355 MiB against a 1,216 MiB baseline (non-torch use +139 MiB). Light low-priority CPU work for other issues (test suites
-  and report scripts) ran on the machine at times during the run, and the GPU check does not cover it. The two times differ by
-  contention and by prompt, and the data cannot split them.
-  The clean comparison is the #35 re-time of the old-prompt 4B at seed 0 under idle checks. It is queued.
+  The v2 runs were idle-checked before they started, but the two prompts differ in output length as well as in contention,
+  and the data cannot split them. The clean comparison is the #35 re-time of the old-prompt runs under idle checks, which is running now and is not in this file.
+- **What can be said about concurrency during the v2 runs.**
+  - *Queue.* The run queue (`results/runq`) runs one job at a time and waits for three idle GPU samples before each. Its status
+    file shows `bbc_dense` done at 20:08:53 and `v2_small` (the v2 0.6B then the v2 1.7B, one script call) from 20:09:13 to 21:43:43, at git 341e420 with a clean
+    tree and an idle line (1,216 MiB, 1% utilization, 43 W) before it. The next entry is on 2026-11-16. So no other queued
+    job overlapped the 0.6B and 1.7B runs. The v2 4B is the same: guard run done 18:12:18, v2 4B 18:12:38-19:44:35, next job 19:44:56.
+  - *Start checks.* Each run's `gpu.json` records an idle check before the model loaded: 0.6B 20:09:19 and 1.7B 20:41:18, median 1,216 MiB, 0-1%
+    utilization, 43-45 W, "median sample within all thresholds".
+  - *Not covered by the GPU check.* Light CPU work for other issues (test suites and report scripts) ran at times, and from about 20:10 to
+    21:00 a niced multi-core CPU replay (`replacement_diagnostic.py`) ran for another issue (from the job notes; it is not recorded in
+    these run directories). The GPU check does not look at CPU, so the timings cannot be called free of CPU contention.
+  - *In-run monitor* (`gpu.json`, `gpu_samples.csv`, a sample every 5 s; the estimate is used memory minus what torch has reserved).
+    The 4B (1,092 samples) and the 0.6B (380 samples) stay flat at 1,319-1,355 MiB, 139 MiB above the pre-run baseline
+    of 1,216 MiB. **The 1.7B (739 samples) does not.** Its estimate is 1,319-1,355 MiB for the first 25 minutes,
+    about 1,500-1,530 MiB from 21:06:40, 2,309-2,841 MiB from 21:09:51 (peak 2,841 at 21:21:38, +1,625 MiB over baseline),
+    and about 2,490-2,530 MiB from 21:32:48 to the end at 21:43:30.
+  - *Per-seed times of the 1.7B.* The summarizer took 568, 590 and 622 s on seeds 0-2 (mean 593 s) and 965 and 941 s on seeds 3 and 4,
+    about 1.6 times longer, with about the same number of calls (697-711 on every seed) and the same tokens (11,188-11,284 output tokens on every seed). The first rise in the memory estimate
+    is in the last two minutes of seed 2. The 0.6B's seeds are all 360-382 s.
+  - *What this means.* The memory estimate counts every non-torch use of the card: other processes (the idle check lists Windows
+    desktop processes on the card, with no memory attributed to them) and non-torch memory inside this process. It cannot tell which
+    one grew. The slowdown at identical call counts, the same thing that inflated the #31 timings, makes another process on the
+    card likely, but this is not shown. The replay was over by then (about 21:00). The v2 1.7B s/seed (744.4 ± 199.3) is therefore
+    **not** treated as a timing. Its first three seeds (mean 593 s) are the cleaner figure, and even those are one run, not a #35 measurement.
+  - *Does it touch the scores?* Greedy decoding at a fixed batch size gives the same outputs (Section 4), so contention should change the time and
+    not the summaries. The 1.7B's ACC on seeds 3 and 4 (0.565, 0.551) is in the range of the others (0.564, 0.564, 0.571). This is a reason to
+    expect no effect, not a test of it.
+- **Tokens are not affected by contention.** Output tokens per seed fall from 15,620 to 9,068 (-42%, 4B), 18,288 to 11,239 (-39%, 1.7B)
+  and 10,227 to 7,806 (-24%, 0.6B), in line with the pilot's -37.5%, -36% and -20% at step 1. Input tokens rise by 1.0%, 3.3% and 0.7%: the
+  instruction is longer, and the members differ after step 1.
+- The call counts are 689, 701 and 698 against 707, 702 and 714. Calls are made for clusters whose summary has to be rewritten, so they depend on how the
+  partitions move. The differences are small (0.1% to 2.5%) and are not read as an effect.
+- Peak GPU memory is the same under both prompts at each size (6.51, 6.54 and 9.25 GB allocated).
+- Truncation: the v2 logs warn once per summarizer (for example, `dropped 19 of 370 text(s)` in the 0.6B, `dropped 10 of 365 text(s)` in the 1.7B). The warning is printed once, so the counts come
+  from the metrics: 3-10, 2-8 and 1-7 truncated clusters per seed (0.6B, 1.7B, 4B) and 15-347 dropped texts, in about 700 calls. The figures are lower
+  than under the old prompt at the 1.7B and 4B and close at the 0.6B, but they depend on the partitions of later steps, so they are not a
+  prompt effect. The truncation rate on the #15 runs is in [`rq2_truncation_check.md`](rq2_truncation_check.md) (#37).
 - One more timing point: the guarded 4B run (`results/clinc150_guard_qwen3-4b/20261112-160734`, old prompt, batch 1, seeds 0-4,
   idle-checked at start) had a mean summarizer time of 1488.6 s per seed (676.6 calls, 14,937 output tokens), between 1855 and
   1094. It follows different partitions (the guard) and overlapped CPU reruns of #33, #47 and #50 for about its first hour
   (timing caveat in `summary_guard.md`), so it does not split contention from prompt either.
-- **Tokens are not affected by contention.** Output tokens fall from 15,620 to 9,068 per seed (-42%), in line with the
-  pilot's -37.5% at step 1. Input tokens rise by 1% (1,120,190 to 1,131,772): the instruction is longer, and the
-  members differ after step 1.
-- The call count is 698 against 714. Calls are made for clusters whose summary has to be rewritten, so it depends on how the
-  partitions move. The difference of 16 in about 700 is small and is not read as an effect.
-- Peak GPU memory is the same: 9.25 GB allocated in both, 9.42 GB reserved (old) against 9.41 GB (v2).
-- Truncation: the log of the v2 run warns once, `a cluster's rendered prompt exceeded max_input_tokens=4096; dropped 2 of 192
-  text(s)`. The warning is printed once per summarizer, so the counts come from the metrics: 1-7 truncated clusters per seed and 15-195
-  dropped texts (v2) against 5-14 clusters and 183-821 texts (old), in about 700 calls. The figures are lower under the clearer prompt, but
-  they depend on the partitions of later steps, so they are not a prompt effect. The truncation rate on
-  the #15 runs is in [`rq2_truncation_check.md`](rq2_truncation_check.md) (#37).
 
 ### 8.5 Lloyd iterations
 
 `trace.jsonl` has 30 records per run (6 k-means fits per seed, 5 seeds), and in every one `last_n_iter` equals the cap
-`last_max_iter` of 20, under both prompts (120 iterations per seed). `metrics.jsonl` has `converged` False for all 5 seeds in both runs. The counts
-are the same in the v2 and the old 4B, so they say nothing about the prompt. They only show that neither run converged by the cap.
+`last_max_iter` of 20, in the old 4B and in all three v2 runs (120 iterations per seed). `metrics.jsonl` has `converged` False for all 5 seeds in those runs. The counts
+do not depend on the prompt. They only show that these runs did not converge by the cap. The old 0.6B and 1.7B were not re-read for this.
 
 ### 8.6 Reading
 
-What the run shows:
+The question of #46 has two parts: does a clearer prompt change the 4B results, and does the order of the sizes change?
 
-- With the clearer prompt, the 4B scores 0.568 ACC against 0.511 with the old one, +0.056 [+0.039, +0.074] on the same seeds
-  and step-0 partitions, higher on all 5 seeds. NMI and ARI move the same way (+0.021, +0.036).
-- Under the clearer prompt the 4B is above k-means (+0.016 ACC [+0.009, +0.023], 5/5) and not distinguishable from LSA
-  with 5 seeds: the ACC (+0.007 [-0.001, +0.016]) and ARI intervals include 0; NMI (+0.008 [+0.002, +0.014]) does not.
-- The surface problem of the old prompt is gone in this run: no summary mentions the cluster, and at most 2 clusters per seed
-  share a summary at the end.
+What the runs show:
+
+- **The 4B changes a lot.** It scores 0.568 ACC against 0.511, +0.056 [+0.039, +0.074] on the same seeds and step-0 partitions, higher on all 5 seeds.
+  NMI and ARI move the same way (+0.021, +0.036). It goes from below k-means on 5 of 5 seeds (-0.040) to above it on 5 of 5 (+0.016), and
+  is not separated from LSA on ACC (+0.007 [-0.001, +0.016]) or ARI, only on NMI (+0.008 [+0.002, +0.014]).
+- **The 0.6B also gains** (+0.022 ACC [+0.010, +0.033], 5/5), to a level above k-means and level with LSA.
+- **The 1.7B does not detectably change:** -0.007 ACC [-0.023, +0.010], 1 of 5 seeds higher. The interval is compatible with a small loss
+  or a small gain. Its advantage over k-means is +0.012 [+0.005, +0.018] under the clearer prompt and was +0.018 [+0.004, +0.033] under the old one.
+- **The size order is not detectable under the clearer prompt.** The three means are 0.563, 0.563 and 0.568 ACC. The paired ACC and ARI intervals
+  between sizes all include 0, and only the 4B's small NMI edge (+0.006 over each smaller size) has intervals that exclude 0. Under the old
+  prompt the order was clear (1.7B above 0.6B above 4B, ACC differences of 0.029 to 0.059, all intervals excluding 0). So the order
+  changes: from a clear one to none that these 5 seeds can resolve. In particular, the 4B is no longer last.
+- **The surface failure is gone at every size.** No v2 summary mentions the cluster, and the identical-summary groups are 0-2 clusters per seed at
+  the 4B and 0 at the other sizes (Section 8.3).
 - This is consistent with #47. There, the 4B's flagged summaries (duplicates and cluster mentions) were worse than the 1.7B's
   at step 1, but replacing them with the k-means centroid did not bring the 4B back above k-means (+0.009 [-0.006, +0.024]).
-  The clearer prompt changes every summary, not only the flagged third (10.9 against 17.7 words, 61% against 85% ending in "?"),
-  so this run does not show that the gain comes from removing the flagged summaries.
+  The clearer prompt changes every summary, not only the flagged third (10.9 against 17.7 words, 61% against 85% ending in "?" for the 4B),
+  so these runs do not show that the gain comes from removing the flagged summaries.
 
 What it does not show:
 
 - It is one prompt change that altered several things in the wording at once (the task, the "same style", "write only the question",
   and the banned words). It does not say which of them matters. No test of single parts was run.
-- It is one dataset (CLINC150) and 5 seeds. The intervals are narrow for the old-versus-new comparison and wide for the
-  comparisons with LSA and the 1.7B.
-- The size order under the clearer prompt is not known. The 0.6B and 1.7B have not run under it. The v2 4B being level with the
-  old 1.7B (-0.002 [-0.021, +0.017]) is a comparison across prompts and is not that answer.
+- The prompt was chosen by the 4B's surface counts (Section 3). The other two sizes had few such failures, so the change was fitted to the 4B's
+  problem, not tuned for each size. The gains at the 0.6B and 4B and the null at the 1.7B should not be read as a ranking of how the sizes "like" the prompt.
+- It is one dataset (CLINC150) and 5 seeds. The intervals are narrow for the old-versus-new comparison at the 4B and 0.6B and wide for the
+  comparison at the 1.7B and for the comparisons with LSA. "Not detectable" means not detectable with 5 seeds: differences of about 0.005 ACC between the
+  sizes cannot be ruled out, and seeds 5-9 (#36 question 2) would narrow the intervals.
 - It does not say the summaries are better or more faithful: the surface counts measure form. #33 and #34 look at that.
-- It does not give a prompt effect on cost (Section 8.4).
-- Truncation affected some clusters' prompts in both runs; the warning was seen once (2 of 192 texts dropped).
+- It does not give a prompt effect on cost (Section 8.4), and the v2 1.7B timing is not clean.
+- Truncation affected some clusters' prompts in all runs (Section 8.4).
 
-Per the reading rule of the issue, the 4B recovers to the level of k-means and above it, and close to the old 1.7B. So the
-old size comparison is confounded by prompt reading for the 4B, and sizes have to be reported under both prompts once the
-other two have run.
+Per the reading rule of the issue, the 4B recovers to the level of k-means and above it, and to the level of the other two sizes. So the
+old size comparison was confounded by how the sizes read the prompt, and sizes have to be reported under both prompts.
 
-### 8.7 Run directories handed on
+### 8.7 What this means for the size trend (#36)
+
+The October finding was that quality does not rise with size (Bank77 NMI 0.645 / 0.648 / 0.648; CLINC150 with the 4B last and the 1.7B first). With both
+prompts on CLINC150 (ACC, mean ± std over seeds 0-4; differences are larger size minus smaller size, 95% interval, seeds above 0):
+
+| Prompt | 0.6B | 1.7B | 4B | 1.7B minus 0.6B | 4B minus 0.6B | 4B minus 1.7B |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+| Old (#31) | 0.541 ± 0.013 | 0.570 ± 0.011 | 0.511 ± 0.015 | +0.029 [+0.009, +0.048], 5/5 | -0.030 [-0.051, -0.008], 0/5 | -0.059 [-0.072, -0.045], 0/5 |
+| Clearer (v2) | 0.563 ± 0.008 | 0.563 ± 0.007 | 0.568 ± 0.010 | +0.000 [-0.002, +0.003], 4/5 | +0.005 [-0.002, +0.012], 4/5 | +0.005 [-0.003, +0.012], 4/5 |
+
+- The shape of the size comparison on CLINC150 depends on the prompt: a non-monotone order with the 4B last under the old one, and no detectable ACC difference
+  between sizes under the clearer one. So the "missing size trend" of October is not a property of size alone. Part of it was the 4B reading
+  the old CLINC150 prompt as a request to describe the cluster.
+- This does not establish a size trend either way. Under the clearer prompt the means rise by 0.005 from the 0.6B/1.7B to the 4B, with intervals that include 0 (NMI
+  is the exception, +0.006), and the tests have no power to separate effects of that size. A size threshold is not supported, and neither is a flat line; the data are consistent with both a null and a small
+  positive effect of the 4B.
+- Open for #36: Bank77 under a clearer prompt (not run), seeds 5-9, the quote artifacts and batch-size questions (3 and 4), and the
+  Qwen3 training differences (6), which a one-family comparison cannot separate from parameter count.
+
+### 8.8 Run directories handed on
 
 - v2 4B, for #33 (replacement diagnostic) and #34 (summary quality): `results/clinc150_v2_qwen3-4b/20261112-181256`
   (git 341e420, clean tree, GPU idle-checked; has `gpu.json` and `gpu_samples.csv`).
-- The old-prompt runs it pairs with: `results/clinc150_lsa/20261027-174631`, `results/clinc150_qwen3-0.6b/20261027-190908`,
+- v2 0.6B: `results/clinc150_v2_qwen3-0.6b/20261112-200926` (git 341e420, clean tree, idle-checked, flat in-run monitor).
+- v2 1.7B: `results/clinc150_v2_qwen3-1.7b/20261112-204127` (git 341e420, clean tree, idle-checked at start; the in-run monitor shows
+  extra non-torch GPU memory from 21:09, Section 8.4, so use its seconds with care; the scores and summaries are unaffected as far as we know).
+- The old-prompt runs they pair with: `results/clinc150_lsa/20261027-174631`, `results/clinc150_qwen3-0.6b/20261027-190908`,
   `results/clinc150_qwen3-1.7b/20261027-202532`, `results/clinc150_qwen3-4b/20261027-221042`.
-- The v2 0.6B and 1.7B directories will be added when they run.
 
 ## Reproduce
 
@@ -388,26 +484,30 @@ python scripts/prompt_test_pilot.py --out-csv docs/results/prompt_test_pilot.csv
 
 The pilot directories were made with `scripts/fixed_workload.py` (README, "Prompt test and fixed workloads (#46)").
 
-Main runs (Section 8). The v2 4B run, then the 0.6B and 1.7B when their turn comes:
+Main runs (Section 8), GPU, one size at a time on an idle card:
 
 ```bash
 PYTHON=/path/to/venv/bin/python scripts/run_clinc150_prompt_v2.sh 4b
-PYTHON=/path/to/venv/bin/python scripts/run_clinc150_prompt_v2.sh 0.6b 1.7b   # pending
+PYTHON=/path/to/venv/bin/python scripts/run_clinc150_prompt_v2.sh 0.6b 1.7b
 ```
 
-Tables for Section 8 (the five runs that exist so far; add `results/clinc150_v2_qwen3-{0.6b,1.7b}/<stamp>` when they run):
+Tables for Section 8 (all seven runs; CPU only):
 
 ```bash
 OLD="results/clinc150_lsa/20261027-174631 results/clinc150_qwen3-0.6b/20261027-190908 results/clinc150_qwen3-1.7b/20261027-202532 results/clinc150_qwen3-4b/20261027-221042"
-V2=results/clinc150_v2_qwen3-4b/20261112-181256
+V2="results/clinc150_v2_qwen3-0.6b/20261112-200926 results/clinc150_v2_qwen3-1.7b/20261112-204127 results/clinc150_v2_qwen3-4b/20261112-181256"
 
 python scripts/aggregate_results.py $OLD $V2 \
     --paired-md docs/results/prompt_test_paired.md --paired-csv docs/results/prompt_test_paired.csv \
-    --references "k-SLMmeans (Qwen3-4B)" "k-means" "k-NLPmeans (LSA)" "k-SLMmeans (Qwen3-1.7B)"
+    --references "k-means" "k-NLPmeans (LSA)" \
+    "k-SLMmeans (Qwen3-0.6B)" "k-SLMmeans (Qwen3-1.7B)" "k-SLMmeans (Qwen3-4B)" \
+    "k-SLMmeans-v2 (Qwen3-0.6B)" "k-SLMmeans-v2 (Qwen3-1.7B)" "k-SLMmeans-v2 (Qwen3-4B)"
 python scripts/aggregate_results.py $OLD $V2 --out-md /dev/null --cost-md docs/results/prompt_test_cost.md
-python scripts/surface_counts.py $V2 results/clinc150_qwen3-4b/20261027-221042 \
+python scripts/surface_counts.py results/clinc150_v2_qwen3-4b/20261112-181256 results/clinc150_v2_qwen3-1.7b/20261112-204127 \
+    results/clinc150_v2_qwen3-0.6b/20261112-200926 results/clinc150_qwen3-4b/20261027-221042 \
     results/clinc150_qwen3-1.7b/20261027-202532 results/clinc150_qwen3-0.6b/20261027-190908 > docs/results/prompt_test_surface.md
 ```
 
 The first command without `--paired-*` (or `scripts/run_clinc150_prompt_v2.sh table`) prints the Section 8.1 table. The
-Lloyd iteration counts (Section 8.5) were read from each run's `trace.jsonl` (`last_n_iter`, `last_max_iter`).
+Lloyd iteration counts (Section 8.5) were read from each run's `trace.jsonl` (`last_n_iter`, `last_max_iter`). The concurrency
+figures in Section 8.4 come from `results/runq/status.txt` and `results/runq/logs/v2_small.log`, and from each run's `gpu.json` and `gpu_samples.csv`.
