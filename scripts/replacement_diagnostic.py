@@ -211,6 +211,29 @@ def step_means(steps: pd.DataFrame, columns: list[str], step: int | None) -> pd.
     return out
 
 
+def step1_spearman(steps: pd.DataFrame, outcome: pd.DataFrame) -> pd.DataFrame:
+    """Spearman correlations of step-1 measures with the step and final outcomes.
+
+    Only (run, method, seed) rows with a k-means reference count (a run without one has none), so one n holds for
+    every row; it is in the column name and in `attrs["n"]`.
+    """
+    s1 = steps[steps.step == 1].merge(outcome.dropna(subset=["kmeans_acc"]), on=["run", "method", "seed"])
+    s1 = s1.assign(
+        d_final_acc=s1.acc - s1.kmeans_acc,
+        d_final_nmi=s1.nmi - s1.kmeans_nmi,
+        d_step_acc=s1.acc_logged_end - s1.acc_cf,
+    )
+    column = "spearman (n=%d)" % len(s1)
+    rows = [
+        {"step-1 measure": x, "outcome": y, column: s1[x].corr(s1[y], method="spearman")}
+        for x in ("jump_rel", "drift_median", "n_empty_replacement", "frac_moved_replacement")
+        for y in ("d_step_acc", "d_final_acc", "d_final_nmi")
+    ]
+    out = pd.DataFrame(rows)
+    out.attrs["n"] = len(s1)
+    return out
+
+
 def build_tables(frames: dict[str, pd.DataFrame]) -> str:
     steps, clusters, stale, outcome = frames["steps"], frames["clusters"], frames["stale"], frames["outcome"]
     parts = []
@@ -345,26 +368,12 @@ def build_tables(frames: dict[str, pd.DataFrame]) -> str:
         + md_table(final, {"acc": ".3f", "kmeans_acc": ".3f", "d_acc": "+.4f", "d_nmi": "+.4f", "d_ari": "+.4f"})
         + "\n"
     )
-    s1 = steps[steps.step == 1].merge(outcome, on=["run", "method", "seed"])
-    s1 = s1.assign(
-        d_final_acc=s1.acc - s1.kmeans_acc,
-        d_final_nmi=s1.nmi - s1.kmeans_nmi,
-        d_step_acc=s1.acc_logged_end - s1.acc_cf,
-    )
-    corr = []
-    for x in ("jump_rel", "drift_median", "n_empty_replacement", "frac_moved_replacement"):
-        for y in ("d_step_acc", "d_final_acc", "d_final_nmi"):
-            corr.append(
-                {
-                    "step-1 measure": x,
-                    "outcome": y,
-                    "spearman (n=%d)" % len(s1): s1[x].corr(s1[y], method="spearman"),
-                }
-            )
+    corr = step1_spearman(steps, outcome)
+    n = corr.attrs["n"]
     parts.append(
-        "Spearman correlation across all (model, seed) pairs at step 1; a descriptive number, not a test. The "
-        "pooled correlation mixes between-model and within-model variation.\n\n"
-        + md_table(pd.DataFrame(corr), {"spearman (n=%d)" % len(s1): "+.2f"})
+        "Spearman correlation across all (model, seed) pairs at step 1 that have a k-means reference; a descriptive "
+        "number, not a test. The pooled correlation mixes between-model and within-model variation.\n\n"
+        + md_table(corr, {"spearman (n=%d)" % n: "+.2f"})
         + "\n"
     )
 

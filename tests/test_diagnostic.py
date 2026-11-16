@@ -203,3 +203,49 @@ def test_perturbation_changes_values_and_keeps_ties_when_asked():
     assert tied_clusters(centers).tolist() == [False, True, False, True, False, False]
     # below float32 resolution almost nothing changes
     assert fraction_changed(centers, perturb(centers, 1e-9, np.random.default_rng(1))) < 0.2
+
+
+def _load_diagnostic_script():
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parent.parent / "scripts" / "replacement_diagnostic.py"
+    spec = importlib.util.spec_from_file_location("replacement_diagnostic_script", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_step1_spearman_excludes_runs_without_a_kmeans_reference():
+    import pandas as pd
+
+    script = _load_diagnostic_script()
+    rng = np.random.default_rng(0)
+    runs = ["with_a", "with_b", "without"]
+    keys = [(r, "m", s) for r in runs for s in range(5)]
+    steps = pd.DataFrame(
+        {
+            "run": [k[0] for k in keys],
+            "method": "m",
+            "seed": [k[2] for k in keys],
+            "step": 1,
+            "acc_logged_end": rng.random(15),
+            "acc_cf": rng.random(15),
+            "jump_rel": rng.random(15),
+            "drift_median": rng.random(15),
+            "n_empty_replacement": rng.random(15),
+            "frac_moved_replacement": rng.random(15),
+        }
+    )
+    outcome = pd.DataFrame(
+        {"run": steps.run, "method": "m", "seed": steps.seed, "acc": rng.random(15), "nmi": rng.random(15), "ari": 0.0}
+    )
+    outcome["kmeans_acc"] = rng.random(15)
+    outcome["kmeans_nmi"] = rng.random(15)
+    outcome.loc[outcome.run == "without", ["kmeans_acc", "kmeans_nmi"]] = np.nan
+
+    corr = script.step1_spearman(steps, outcome)
+    assert corr.attrs["n"] == 10
+    assert "spearman (n=10)" in corr.columns
+    assert corr["spearman (n=10)"].notna().all()
+    assert len(corr) == 12

@@ -196,20 +196,20 @@ Final scores against k-means from the same initialization (logged values; mean o
 | qwen3-4b | 0.511 | 0.551 | -0.0402 | -0.0086 | -0.0181 |
 | v2_qwen3-4b | 0.568 | n/a | n/a | n/a | n/a |
 
-Spearman correlation across all (model, seed) pairs at step 1; a descriptive number, not a test. The pooled correlation mixes between-model and within-model variation.
+Spearman correlation across all (model, seed) pairs at step 1 that have a k-means reference; a descriptive number, not a test. The pooled correlation mixes between-model and within-model variation.
 
-| step-1 measure | outcome | spearman (n=25) |
+| step-1 measure | outcome | spearman (n=20) |
 | --- | --- | ---: |
-| jump_rel | d_step_acc | -0.29 |
+| jump_rel | d_step_acc | -0.32 |
 | jump_rel | d_final_acc | -0.44 |
 | jump_rel | d_final_nmi | -0.36 |
-| drift_median | d_step_acc | -0.37 |
+| drift_median | d_step_acc | -0.44 |
 | drift_median | d_final_acc | -0.35 |
 | drift_median | d_final_nmi | -0.29 |
-| n_empty_replacement | d_step_acc | -0.40 |
+| n_empty_replacement | d_step_acc | -0.51 |
 | n_empty_replacement | d_final_acc | -0.77 |
 | n_empty_replacement | d_final_nmi | -0.68 |
-| frac_moved_replacement | d_step_acc | -0.48 |
+| frac_moved_replacement | d_step_acc | -0.55 |
 | frac_moved_replacement | d_final_acc | -0.63 |
 | frac_moved_replacement | d_final_nmi | -0.52 |
 
