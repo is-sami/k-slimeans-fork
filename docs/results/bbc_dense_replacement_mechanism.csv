@@ -1,0 +1,5 @@
+run,method,seed,n_label_mismatch,n_iter,n_iter_kmeans,max_center_diff,sklearn
+bbc_dense_lsa,k-NLPmeans,0,0,6,6,0.0,1.9.1
+bbc_dense_qwen3-0.6b,k-SLMmeans,0,0,13,13,0.0,1.9.1
+bbc_dense_qwen3-1.7b,k-SLMmeans,0,0,6,6,0.0,1.9.1
+bbc_dense_qwen3-4b,k-SLMmeans,0,0,9,9,0.0,1.9.1

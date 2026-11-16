@@ -19,6 +19,9 @@ Five seeds, one dataset, one model family. Numbers are means over seeds unless s
 - **Surface.** No summary mentions the cluster, and none is duplicated. Every Qwen summary contains the words "news stories" from the prompt.
 - **Replacement diagnostic (TF-IDF, CPU, exact).** All 120 fits replay the logged runs with 0 label mismatches. A summary sits 0.98-1.08 RMS radii
   from the centroid it replaces, about what CLINC150 showed (0.89-1.08), but the cosine is much lower (0.17-0.43 against 0.67-0.80).
+- **Replacement diagnostic (dense control, GPU encode, exact).** All 85 fits replay with 0 label mismatches (relative errors at most 1.5e-7). A summary sits
+  0.89-1.07 RMS radii from the centroid it replaces, as in TF-IDF and CLINC150; the cosine (0.35-0.66) is between the two. Seeds 0 and 2 (merged business/tech start) move more points over
+  the block (13% against 0.6% net) but have about the same jump (Section 7).
 - **Cost.** About 24 summarizer calls and 84,000-87,000 input tokens per seed in the TF-IDF variant; 27, 46 and 87 s per seed for 0.6B, 1.7B and 4B.
 
 ## 1. Setup
@@ -225,7 +228,7 @@ Tokens are the scikit-learn analyzer's tokens after stop-word removal, summed ov
 ## 7. Replacement diagnostic (issue step 5)
 
 **Tool support.** `scripts/embed_logged_summaries.py` and `scripts/replacement_diagnostic.py` work on the TF-IDF runs without a change (`load_run_embedder` rebuilds the fitted vectorizer from the 500 articles; the cached 500 x 784 matrix is used). Two small gaps, neither fixed here:
-the script's final figure step raises a `KeyError` for any run name that is not one of the four CLINC150 names (the CSVs and tables are written before it, and nothing needed for this section is lost), and its `examples.md` quotes article text, so all outputs were written to a scratch directory and only the numeric files were copied here (the examples file is **not committed**).
+the script's final figure step raises a `KeyError` for any run name that is not one of the four CLINC150 names (the CSVs and tables are written before it, and nothing needed for this section is lost), and its `examples.md` quotes article text, so all outputs were written to a scratch directory and only the numeric files were copied here (the examples file is **not committed**, for either variant).
 
 **Verification (TF-IDF, CPU).** TF-IDF transforms are deterministic, so the summaries were re-embedded on the CPU with the same fitted vectorizer
 (`embed_logged_summaries.py --device cpu`, 9 s) and the logged runs replayed (`replacement_diagnostic.py`, 62 s wall time, nice 19). Result ([`bbc_tfidf_replacement_verification.md`](bbc_tfidf_replacement_verification.md), scikit-learn 1.9.1):
@@ -259,17 +262,67 @@ No figures were made. Definitions are those of [`replacement_diagnostic.md`](rep
   In NMI and ARI the means are +0.029 / +0.059 (1.7B) and +0.016 / +0.044 (4B), but about zero or mixed for LSA (NMI -0.015, ARI +0.017) and the 0.6B (-0.002, +0.003). So the step-1 improvement over plain Lloyd shows in ACC for the 1.7B and 4B and in all three metrics only for those two, with 5 seeds and one start per seed. This is a description of 20 (method, seed) pairs, not an effect estimate.
 - Share of the final summaries that no longer describe the final partition (Jaccard below 0.5, or nearer another cluster's final center): LSA 0 of 25, 0.6B 5, 1.7B 1, 4B 4.
 
-**Dense variant (not run).** An exact replay needs the summaries re-encoded by MiniLM on the GPU the runs used (as for CLINC150, where a CPU encode differs by about 1e-6 per row and did not reproduce the 4B's blocks). This is one queued GPU step of about a minute, then CPU replays.
-The commands, with `<stamp>` the run directories of `bbc_dense_{lsa,qwen3-0.6b,qwen3-1.7b,qwen3-4b}`, and a scratch output directory so that the CLINC150 files in `docs/results/` are not overwritten and no article text is committed:
+**Dense control (MiniLM, 500 x 384).** The logged summaries of the four dense runs were encoded on the GPU the runs used (`embed_logged_summaries.py --device cuda`), then replayed on the CPU (`replacement_diagnostic.py`), as for CLINC150, where a CPU encode differs by about 1e-6 per row and did not reproduce the 4B's blocks.
+The script's `KeyError` in the figure step came up again after every table was written (the only error in the log); no figures were made. Outputs: [`bbc_dense_replacement_tables.md`](bbc_dense_replacement_tables.md), [`_steps.csv`](bbc_dense_replacement_steps.csv),
+[`_outcome.csv`](bbc_dense_replacement_outcome.csv), [`_verification.csv`](bbc_dense_replacement_verification.csv) / [`.md`](bbc_dense_replacement_verification.md), [`_mechanism.csv`](bbc_dense_replacement_mechanism.csv). The examples file is not committed.
 
-```bash
-python scripts/embed_logged_summaries.py results/bbc_dense_lsa/<stamp> results/bbc_dense_qwen3-0.6b/<stamp> \
-    results/bbc_dense_qwen3-1.7b/<stamp> results/bbc_dense_qwen3-4b/<stamp> \
-    --cache-dir cache --out results/replacement_diagnostic/bbc_dense_summary_embeddings_cuda.npz --device cuda
-CUDA_VISIBLE_DEVICES="" python scripts/replacement_diagnostic.py results/bbc_dense_lsa/<stamp> ... \
-    --cache-dir cache --summary-embeddings results/replacement_diagnostic/bbc_dense_summary_embeddings_cuda.npz \
-    --out-dir results/replacement_diagnostic/bbc_dense --work-dir results/replacement_diagnostic/bbc_dense_work
-```
+**Verification (dense, GPU encode, CPU replay).** All 85 fits (step 0 and every summary block of every seed; a run that stopped before step 5 has fewer blocks, hence 85 and not 120) reproduce the logged partition with 0 mismatching labels and the logged iteration count (scikit-learn 1.9.1):
+
+| run | fits | exact fits | label mismatches (max) | `n_iter` differs | max rel. error, summary-step objective | max rel. error, end objective |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| LSA | 18 | 18 | 0 | 0 | 0 | 1.5e-07 |
+| Qwen3-0.6B | 27 | 27 | 0 | 0 | 0 | 9.8e-08 |
+| Qwen3-1.7B | 24 | 24 | 0 | 0 | 0 | 9.8e-08 |
+| Qwen3-4B | 16 | 16 | 0 | 0 | 0 | 1.1e-07 |
+
+The real-`KMeans` mechanism check (first seed of every method) agrees: 0 label mismatches, same `n_iter`, center difference 0.0 ([`bbc_dense_replacement_mechanism.csv`](bbc_dense_replacement_mechanism.csv)).
+
+**Centroid jump, step 1, mean over seeds, dense beside TF-IDF and CLINC150** (per-cluster medians for the radii and the cosine, as above):
+
+| Method | jump in J (rel.), dense / TF-IDF / CLINC | summary to centroid, RMS radii, dense / TF-IDF / CLINC | cosine, dense / TF-IDF / CLINC | points moved at the replacement, dense / TF-IDF / CLINC |
+| --- | --- | --- | --- | --- |
+| LSA | 0.76 / 0.92 / 0.72 | 0.887 / 0.975 / 0.891 | 0.66 / 0.43 / 0.80 | 17% / 26% / 25% |
+| Qwen3-0.6B | 1.10 / 1.13 / 0.78 | 1.07 / 1.08 / 0.965 | 0.37 / 0.17 / 0.75 | 25% / 50% / 47% |
+| Qwen3-1.7B | 1.11 / 1.10 / 0.95 | 1.06 / 1.06 / 1.05 | 0.40 / 0.19 / 0.71 | 24% / 46% / 47% |
+| Qwen3-4B | 1.15 / 1.13 / 0.98 | 1.07 / 1.08 / 1.08 | 0.35 / 0.20 / 0.67 | 22% / 47% / 56% |
+
+- **Jump in radii:** 0.89-1.07, the same as TF-IDF (0.98-1.08) and CLINC150 (0.89-1.08). Every summary is about one cluster radius from the centroid it replaces, in all three settings.
+- **Cosine:** 0.35-0.66, between TF-IDF (0.17-0.43) and CLINC150 (0.67-0.80). LSA's is highest of the four, as in the other two settings. The relative objective rise is 0.76-1.15 (TF-IDF 0.92-1.13, CLINC150 0.72-0.98).
+- **Moved shares:** 17-25% at the replacement, below TF-IDF's 26-50% and CLINC150's 25-56%. The net share that stays moved after the block is 3-7% (ARI with the pre partition 0.89-0.95; TF-IDF 0.71-0.75, CLINC150 0.65-0.85), so the block returns closer to the old partition than in either of the others.
+  The dense space starts at k-means optima that are mostly already good (Section 3), which may be part of why fewer points move; this was not tested.
+- Duplicates and collapsed centroids: none (0 duplicate clusters, 0 empty clusters at the replacement or at the end of any block, 0 reseeded). Sklearn's own stop is reached in 6-8 iterations on average (counterfactual: 1) with no run at the cap, and the differences to plain Lloyd are the same as for the 20-iteration comparison.
+- Movers at the replacement toward their gold majority: 5.0-7.8 of 87-125 movers on average, against 1.6-2.5 for a shuffled destination; away from it 56-92 against 55-82. Descriptive, 5 seeds.
+- Share of the final summaries that no longer describe the final partition (Jaccard below 0.5, or nearer another cluster's final center), per the tables file: LSA 0 of 5, 0.6B 0 of 20, 1.7B 1 of 10, 4B 1 of 5 (the denominators are the summaries shown at the final step of each run, so they differ).
+
+**Outcome at step 1, logged partition minus plain Lloyd from the same step-0 partition** (mean over seeds; "seeds below" counts seeds with a lower ACC than the counterfactual):
+
+| Method | dense ACC | dense NMI | dense ARI | seeds below (dense) | TF-IDF ACC (seeds below) | CLINC150 ACC |
+| --- | ---: | ---: | ---: | ---: | --- | ---: |
+| LSA | +0.033 | +0.020 | +0.035 | 3/5 | +0.020 (1/5) | +0.005 |
+| Qwen3-0.6B | +0.016 | -0.006 | +0.004 | 0/5 | +0.022 (1/5) | +0.002 |
+| Qwen3-1.7B | +0.006 | +0.010 | +0.007 | 1/5 | +0.057 (0/5) | +0.011 |
+| Qwen3-4B | +0.043 | +0.036 | +0.054 | 0/5 | +0.046 (1/5) | -0.016 |
+
+The dense means are carried by seed 2. There LSA and the 4B reach +0.204 ACC over plain Lloyd (the same value, both leaving the merged start), the 0.6B and 1.7B +0.032 and +0.026, and plain Lloyd stays at the merged start. Without seed 2 the LSA mean is -0.010 and the 4B's +0.003.
+On seeds 1, 3 and 4 the difference to plain Lloyd is between -0.004 and +0.006 for every method. Seed 0 differs by method at step 1: LSA -0.034, 0.6B +0.040, 1.7B 0.000, 4B +0.002. The per-seed table is in [`bbc_dense_replacement_tables.md`](bbc_dense_replacement_tables.md).
+Over all five steps and to the final score, the means against k-means from the same initialization are LSA +0.032, 0.6B +0.095, 1.7B +0.038 and 4B +0.036 in ACC, which is the Section 3 pattern again (two seeds), not a separate result.
+
+**Seeds 0 and 2 against seeds 1, 3 and 4, step 1** (seeds 0 and 2 start from the merged business/tech partition; each cell is the mean over the four methods, so 8 and 12 method-seed pairs; descriptive only):
+
+| Step-1 measure | seeds 0, 2 | seeds 1, 3, 4 |
+| --- | ---: | ---: |
+| jump in J (rel.) | 1.04 | 1.02 |
+| summary to centroid, RMS radii | 1.03 | 1.01 |
+| cosine | 0.42 | 0.46 |
+| points moved at the replacement | 26% | 19% |
+| points that stay moved after the block | 13% | 0.6% |
+| iterations in the block | 8.6 | 6.3 |
+| objective at block end, relative to plain Lloyd | -0.4% | 0.0% |
+
+- The distance and objective jump at the replacement are about the same on the two groups. What differs is what the block does afterwards: on seeds 1, 3 and 4 almost every point returns to its old cluster (0.5-0.8% stay moved for every method), while on seeds 0 and 2 15-17% stay moved for LSA, the 0.6B and the 4B, and 6.5% for the 1.7B.
+  The block also runs more iterations and ends 0.7-0.8% lower in the k-means objective than plain Lloyd for LSA and the 4B (0.1% for the 0.6B and 1.7B), against about 0.0% on the other seeds.
+- More points move at the replacement on seeds 0 and 2 as well (26% against 19%; per method, 22-30% against 14-24%), and the cosine is a little lower (0.42 against 0.46). With 2 and 3 seeds these are small differences and the groups overlap for some methods.
+- The seeds whose partition changes after the block are the seeds whose start is a merged optimum; whether the merge causes it is not shown by these runs (two seeds, four methods that share the same step-0 partition).
 
 ## 8. Reading
 
@@ -287,7 +340,7 @@ Five seeds, one dataset with 5 topics, one model family, one prompt, one member-
 ## 9. Limits and next steps
 
 - The first-30-words cut and the news prompt were fixed in advance. The #28 random subset of whole articles (`0.6b-random`) was not run, so how much the member selection matters is open.
-- The dense replacement diagnostic needs the queued GPU encode (Section 7).
+- The dense replacement diagnostic is done (Section 7). The seed 0/2 comparison there rests on two and three seeds per group, with the four methods sharing each seed's step-0 partition, so it is not 20 independent observations. The diagnostic describes step 1 in detail; later steps are pooled.
 - The TF-IDF vocabulary is 784 terms at `min_df` 20; other settings were not tried.
 - Timings come from a shared machine (Section 6).
 - The README's BBC section says articles average ~380 words; the 500-article sample averages 401 (whitespace-split words).
@@ -331,5 +384,20 @@ for f in verification.csv verification.md mechanism.csv steps.csv outcome.csv ta
 done
 ```
 
-The script ends with a `KeyError` in the figure step (Section 7) after writing all tables and CSVs. The dense replay is in Section 7.
+```bash
+# Replacement diagnostic, dense control. The summaries must be encoded on the GPU the runs used for an exact replay (a CPU encode differs
+# by about 1e-6 per row); the replay itself runs on the CPU. Same scratch-directory rule as above.
+DENSE_RUNS="results/bbc_dense_lsa/<stamp> results/bbc_dense_qwen3-0.6b/<stamp> results/bbc_dense_qwen3-1.7b/<stamp> results/bbc_dense_qwen3-4b/<stamp>"
+python scripts/embed_logged_summaries.py $DENSE_RUNS --cache-dir cache \
+    --out results/replacement_diagnostic/bbc_dense_summary_embeddings_cuda.npz --device cuda
+CUDA_VISIBLE_DEVICES="" python scripts/replacement_diagnostic.py $DENSE_RUNS --cache-dir cache \
+    --summary-embeddings results/replacement_diagnostic/bbc_dense_summary_embeddings_cuda.npz \
+    --out-dir results/replacement_diagnostic/bbc_dense --work-dir results/replacement_diagnostic/bbc_dense_work
+OUT=results/replacement_diagnostic/bbc_dense
+for f in verification.csv verification.md mechanism.csv steps.csv outcome.csv tables.md; do
+  cp $OUT/replacement_diagnostic_$f docs/results/bbc_dense_replacement_$f
+done
+```
+
+`replacement_diagnostic.py` ends with a `KeyError` in the figure step (Section 7) after writing all tables and CSVs, with exit code 1, for both variants.
 Tests: `tests/test_bbc_report.py`.
