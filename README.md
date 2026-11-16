@@ -172,6 +172,8 @@ tests/             pytest suite, incl. exact-equivalence fixtures generated from
 
 ## Running experiments
 
+Results so far, one page per request from the November feedback: [`docs/results/progress_nov16.md`](docs/results/progress_nov16.md).
+
 Experiments are YAML configs run by a script. Any key can be overridden from the command line with
 `--set dotted.key=value`. Values are parsed as YAML, so `--set seeds=[0,1,2]` and
 `--set 'dataset={name: stackexchange, year: 2023}'` both work. Unknown keys are rejected, so a typo fails

@@ -1,0 +1,173 @@
+# Progress summary for the Nov 16 submission
+
+Issue #45 (tracker). This page condenses the detailed write-ups, one section per request from the professor's November feedback. Every number is copied from the linked document. Unless a line says otherwise: CLINC150, Qwen3 models, 5 seeds (0-4), one RTX 3060, paired by seed, 95% Student-t intervals over seeds (4 degrees of freedom, not corrected for multiple comparisons). Sizes are Qwen3 sizes; "old" is the October prompt (#31), "v2" is the clearer prompt (#46).
+
+Evidence tags used below: **[exact]** a direct measurement of logged runs (the replay reproduces them), **[intervention]** the experimenter changed summary text or its use, **[association]** a descriptive relation in logged data. The only interventions in the project are #47's swaps and guarded run, and the prompt change, which is a multi-factor two-run intervention.
+
+## Headline findings
+
+1. Replacing the centroids with summaries raises the k-means objective by 72% (LSA) to 98% (old 4B) at step 1, Lloyd removes most of that within a couple of iterations, and yet 9% (LSA) to 45% (old 4B) of the points end in a different cluster than before the replacement. [exact]
+2. At step 1 the old 4B's partition has lower ACC than plain Lloyd from the same state in 5 of 5 seeds (-0.0159), with 18.8 duplicate summaries and 10.8 emptied clusters per seed (1.7B: 0.8 and 0.6; its ACC is above plain Lloyd, +0.0106, 0 of 5 below). [exact]
+3. Putting the 1.7B's summaries into the 4B's flagged clusters (duplicate or mentions the cluster; 43-56 of 150) raises step-1 ACC by +0.026 [+0.019, +0.034], 5 of 5 seeds, about all of the 4B-to-1.7B gap; the same swap into random unflagged clusters changes it by -0.002 [-0.012, +0.007]. [intervention, step 1 only]
+4. Starting the flagged clusters from their k-means center at every step does not recover the 4B's final scores: ACC +0.009 [-0.006, +0.024] over the unguarded 4B, still 0.031 below k-means. [intervention, 5 steps]
+5. A clearer prompt lifts the 4B's final ACC from 0.511 to 0.568 (+0.056 [+0.039, +0.074], 5 of 5 seeds) and the 0.6B by +0.022 [+0.010, +0.033], leaves the 1.7B unchanged within noise (-0.007 [-0.023, +0.010]), and the size order disappears (0.563 / 0.563 / 0.568). [multi-factor two-run intervention]
+6. Summary-quality scores do not rank final ACC across the seven model runs (coverage 0.49-0.69, ACC 0.511-0.570); within a run they track which members leave a cluster (rank correlation with coverage -0.78 / -0.72 / -0.83 for 0.6B / 1.7B / 4B), largely by construction. [association]
+7. Whether a cluster's purity rises or falls after the replacement is not predicted by the summary scores once starting purity and size are controlled; starting purity separates the sign (step 1, against plain Lloyd: clusters with purity <= 0.4 gain +0.04 to +0.06 for the three October models, clusters above 0.9 lose 0.04 to 0.09). [association]
+8. The cost counters have no counting bug (calls and input tokens exact; output tokens within 0.1%), every size sends about 1.1M input tokens per seed, and the clearer prompt cuts output tokens by 24% to 42%; seconds are inflated (about 1.7x) and not comparable across runs yet. [exact for tokens, estimate for the inflation]
+9. On BBC (500 articles, TF-IDF) every summary method has a higher mean ACC than k-means (0.788 against 0.839-0.873), but 28 of 30 paired intervals include 0; the dense control is driven by two seeds with a bad start. [association, 5 seeds]
+10. arXiv at full scale has not produced results yet: the plan and cost estimate are in place (about 2.9 GPU-hours for the 1.7B run when idle, up to 4.9), and the pilot, the baselines and LSA at 200k are running. See the placeholder in Section 5.
+
+## 1. A summary replaces a centroid (#33, #47)
+
+**What was done.** The logged CLINC150 runs (#31, plus the v2 4B) were replayed offline: every Lloyd block is re-run from the logged summaries, and the replay is exact (150 of 150 fits, 0 label mismatches). It adds a no-replacement counterfactual (plain Lloyd from the pre-replacement state). #47 then edits the 4B's step-1 start centers (swaps between the 4B and the 1.7B, with matched random controls) and runs a guarded 4B for five steps.
+
+Step 1, means over 5 seeds ([`replacement_diagnostic.md`](replacement_diagnostic.md) Sections 3-8):
+
+| Measure | LSA | 0.6B | 1.7B | old 4B | v2 4B |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Objective rise at the replacement | 0.72 | 0.78 | 0.95 | 0.98 | 0.70 |
+| Points moved at the replacement / net after the block | 25% / 9% | 47% / 33% | 47% / 29% | 56% / 45% | 40% / 27% |
+| Duplicate summaries per seed | 0 | 3.0 | 0.8 | 18.8 | 1.2 |
+| Empty clusters after the replacement, per seed | 0 | 1.2 | 0.6 | 10.8 | 0.4 |
+| ACC, logged minus plain Lloyd (seeds below) | +0.0051 (0/5) | +0.0016 (3/5) | +0.0106 (0/5) | -0.0159 (5/5) | +0.0024 (2/5) |
+| Final summaries out of date (Jaccard < 0.5) | 0.5% | 29% | 30% | 55% | 25% |
+| Final ACC minus k-means [95%] | +0.009 [+0.001, +0.017] | -0.010 [-0.018, -0.002] | +0.018 [+0.004, +0.033] | -0.040 [-0.058, -0.022] | +0.016 [+0.009, +0.023] |
+
+The old 4B's step-1 deficit also holds with both sides run to convergence (-0.0138, 5 of 5 seeds), so it is not a fixed-budget artifact. Its re-encoding noise floor is 0.003 ACC on average (0.008 at most), so differences below that are not read.
+
+The interventions ([`counterfactual_swaps.md`](counterfactual_swaps.md), [`summary_guard.md`](summary_guard.md)), paired by seed:
+
+| Intervention | Change in ACC [95%] | Reading |
+| --- | --- | --- |
+| Step 1: 1.7B summaries into the 4B's flagged clusters | +0.0261 [+0.0185, +0.0337], 5/5 seeds | closes 99% of the gap to the 1.7B |
+| Same, minus the matched control (random unflagged clusters) | +0.0285 [+0.0149, +0.0420] | the gain is specific to the flagged clusters |
+| Step 1: 4B's flagged summaries into the 1.7B, minus control | -0.0248 [-0.0410, -0.0086] | the effect travels with the summary text |
+| Step 1: flagged clusters keep their k-means center | +0.0064 [-0.0058, +0.0185] | not shown |
+| Five steps: guarded 4B minus unguarded 4B (final) | +0.0093 [-0.0059, +0.0244], 4/5 seeds | not detectable |
+| Five steps: guarded 4B minus k-means (final) | -0.0310 [-0.0429, -0.0190], 0/5 seeds | gap remains |
+
+**What it shows.** [exact] A replacement is a large disturbance that Lloyd does not undo: the partition settles somewhere different, most for the old 4B. The old 4B's replacement has duplicate and cluster-mentioning summaries that give identical centers, emptied clusters and out-of-date summaries; the v2 4B looks like the 1.7B on these measures. [intervention] At step 1 the flagged summaries carry the difference between the 4B and the 1.7B.
+
+**What it does not show.** The swaps cover step 1 only and one model pair; flagged clusters may also be harder clusters. The guard replaces a flagged summary with a k-means center, not a better summary, and acts on a third of the clusters, so it does not test the swap over five steps; an effect up to +0.024 is not excluded. Neither stage shows why the 4B's whole-run score is low. Objective jump size does not rank outcomes (1.7B and 4B jump alike and end on opposite sides).
+
+**Pending.** The #33 replay for the v2 0.6B and 1.7B; BANKING77 (needs a re-run with #30 logging).
+
+## 2. Does a clearer prompt change the 4B results? (#46)
+
+**What was done.** One prompt, fixed and committed before any run (it asks for one new question in the same style, "write only the question", and bans mentioning the questions, a group, a cluster or a topic). All three sizes, seeds 0-4, same step-0 partitions, same batch sizes ([`prompt_test.md`](prompt_test.md) Section 8).
+
+| Size | Final ACC old / v2 | v2 minus old [95%], seeds higher | v2 minus k-means [95%] |
+| --- | ---: | --- | --- |
+| 0.6B | 0.541 / 0.563 | +0.022 [+0.010, +0.033], 5/5 | +0.011 [+0.005, +0.017] |
+| 1.7B | 0.570 / 0.563 | -0.007 [-0.023, +0.010], 1/5 | +0.012 [+0.005, +0.018] |
+| 4B | 0.511 / 0.568 | +0.056 [+0.039, +0.074], 5/5 | +0.016 [+0.009, +0.023] |
+
+The 4B mentions the cluster in 34% of summaries under the old prompt and 0% under the new one; its identical-summary groups at the final step go from 16-21 clusters per seed to 0-2. Size order, 4B minus 1.7B: old -0.059 [-0.072, -0.045], v2 +0.005 [-0.003, +0.012]. No v2 size is separated from LSA on ACC.
+
+**What it shows.** The 4B's October drop was not a property of size alone; under the clearer prompt it is no longer last and no size order is detectable. Between the two 4B runs the summary properties moved more than the cluster outcomes: members lost 0.44 to 0.24, but the mean change in member purity at step 1 only from -0.032 to -0.009 (+0.023 [+0.007, +0.039]), and the share of helped clusters fell (14.3% to 10.8%) ([`synthesis.md`](synthesis.md) Section 2).
+
+**What it does not show.** The prompt changed several things at once, was chosen on the 4B's surface counts, and was not tested part by part, so it does not isolate the cluster-talk failure (the 0.6B gained with only 8% cluster talk before). The summaries differ in every cluster. The clearer prompt raises verbatim copies of a member (v2 4B 12%, v2 0.6B 33%; old 1.4% and 14.6%), and whether copying contributes to the ACC gain was not tested. One dataset, 5 seeds; "not detectable" means not detectable with 5 seeds. Bank77 was not run under the clearer prompt. It measures no cost effect.
+
+**Pending.** Seeds 5-9 (#36), the #33 replay of the v2 0.6B and 1.7B.
+
+## 3. Summary-quality evaluation (#34)
+
+**What was done.** Four families scored separately on 27,790 summaries (26,250 CLINC150, 1,540 BANKING77; seven CLINC150 runs): coverage of cluster members, genericity, unsupported information (lexical, so it overstates), and fluency proxies. LSA summaries act as a control. Last summary step, CLINC150 ([`summary_quality.md`](summary_quality.md) Section 3):
+
+| Run | Nearest-summary share | Specificity margin | Generic | Unsupported lemmas | Not fluent | Members lost | Final ACC |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| LSA | 0.796 | 0.250 | 0% | 0.000 | 1% | 2% | 0.560 |
+| 0.6B | 0.607 | 0.146 | 17% | 0.128 | 29% | 24% | 0.541 |
+| 1.7B | 0.614 | 0.112 | 21% | 0.304 | 9% | 25% | 0.570 |
+| old 4B | 0.494 | 0.003 | 47% | 0.454 | 35% | 41% | 0.511 |
+| v2 0.6B | 0.689 | 0.204 | 6% | 0.013 | 39% | 12% | 0.563 |
+| v2 1.7B | 0.603 | 0.122 | 19% | 0.296 | 2% | 21% | 0.563 |
+| v2 4B | 0.672 | 0.153 | 17% | 0.140 | 43% | 20% | 0.568 |
+
+**What it shows.** [association] The old 4B is worst on coverage, margin, duplicates and unsupported content and lowest in ACC. Across all seven runs the scores do not rank ACC: the v2 runs score very differently and share an ACC. Members whose intent the summary does not cover leave much more often (old 4B 75% against 14% for covered members), which is partly built in. Fluency proxies are not aligned with the other families and add nothing beyond coverage in predicting outcomes ([`synthesis.md`](synthesis.md) Section 4). Fluent, well-formed summaries ("What is the main theme of the cluster?") can be useless representatives.
+
+**AI-rater stand-in (not a human rating).** Two Claude Sonnet 5.5 instances each rated the blank audit sheets (40 summaries per dataset) blind to method and scores. Their agreement with each other is high (kappa 0.66-1.00 on CLINC150; BANKING77 generic 0.00 from one label), which is as consistent with shared bias as with a clear rubric. Against the automatic flags: not fluent kappa 0.72-0.87; low coverage 0.30 on CLINC150; unsupported -0.05 / -0.09 on CLINC150 (the flag is lexical, the raters accept paraphrase). This is a first look at where flags and a careful reading agree, **not** a validation of the scores and not a hand-check result.
+
+**What it does not show.** How the scores relate to clustering outcome beyond association (#47, #50). The v2 runs are not in the audit sheets.
+
+**Pending.** The human hand check on the blank sheets (the student's job); its agreement numbers replace the stand-in.
+
+## 4. Cost verification (#35, parts 1-2; part 3 pending)
+
+**What was done.** Part 1: the logged counters were rebuilt from the logged partitions and summaries with the Qwen3 tokenizer, no GPU ([`cost_verification.md`](cost_verification.md)). Part 2: every run since logs a GPU idle check (`gpu.json`) and a monitor (`gpu_samples.csv`).
+
+**Results.** [exact] No counting bug. Calls per step and per run, input tokens, truncated clusters and dropped texts match exactly at batch sizes 8, 4 and 1; output tokens match within 0.1% (at most 15 tokens per seed, cause not isolated). `summarizer_seconds` is a wall-clock reading taken after the GPU work finishes; for the language models it is 99.1-99.7% of total seconds. Per seed, from the #31 and #46 runs ([`prompt_test.md`](prompt_test.md) Section 8.4):
+
+| Run | Calls | Input tokens | Output tokens | Summarizer s |
+| --- | ---: | ---: | ---: | ---: |
+| LSA | 636 | 0 | 0 | 15 |
+| 0.6B old / v2 | 707 / 689 | 1.11M / 1.12M | 10.2k / 7.8k | 896 / 373 |
+| 1.7B old / v2 | 702 / 701 | 1.10M / 1.14M | 18.3k / 11.2k | 1,239 / 737 |
+| 4B old / v2 | 714 / 698 | 1.12M / 1.13M | 15.6k / 9.1k | 1,855 / 1,094 |
+
+Tokens are the only clean cost statement: output tokens fall 24% / 39% / 42% under the clearer prompt (0.6B / 1.7B / 4B). Truncation touches about 1% of calls; `rq2_truncation_check.md` (#37) concludes the #15 numbers stand with a caveat and a re-run is optional (prepared, not run).
+
+**What it does not show.** The seconds are not a cost comparison. The #31 seconds were inflated about 1.7x by another process on the card (estimate from one BANKING77 check, 185 s against 105-115 s, not measured on CLINC150); batch sizes 8 / 4 / 1 mix model size with batching; the v2 seconds are not comparable with the old ones, and the v2 1.7B's later seeds ran about 1.6x slower with a foreign GPU process seen at the end. No time saving from the prompt is claimed.
+
+### TO FILL: cost_timing.md
+
+Placeholder. #35 part 3 (re-timing a fixed workload with batching held fixed, on an idle-checked card) is written up in `docs/results/cost_timing.md`, which is in progress on another branch. Fill here: the fixed-workload seconds per size, the measured inflation of the #31 timings, and whether the size ordering of cost survives equal batching. Already known: the token counts above and the counter verification.
+
+**Pending.** Part 3 (above); full-seed re-timing (deferred); the optional pricing comparison (#10).
+
+## 5. Large-scale (arXiv) and high-dimensional (BBC) datasets (#48, #18)
+
+### BBC News, 500 articles, k = 5, 5 seeds ([`bbc.md`](bbc.md))
+
+**What was done.** k-means, LSA and Qwen3 0.6B / 1.7B / 4B on a TF-IDF space (784 terms, the main variant) and a dense MiniLM control, with the #31 protocol; the replacement diagnostic replays all runs exactly (TF-IDF 120 of 120 fits, dense 85 of 85).
+
+| Method (TF-IDF) | ACC | Paired ACC minus k-means [95%], seeds higher |
+| --- | ---: | --- |
+| k-means | 0.788 +- 0.080 | |
+| LSA | 0.839 +- 0.033 | +0.051 [-0.020, +0.121], 4/5 |
+| 0.6B | 0.851 +- 0.022 | +0.063 [-0.053, +0.179], 3/5 |
+| 1.7B | 0.873 +- 0.021 | +0.085 [-0.009, +0.178], 5/5 |
+| 4B | 0.854 +- 0.022 | +0.066 [-0.027, +0.159], 4/5 |
+
+**What it shows.** Summary methods do not lose to k-means here, but only 2 of 30 paired intervals exclude 0 (1.7B against k-means in ARI, 1.7B against LSA in NMI), and size does not order the models. In the dense space the means (k-means 0.866, LSA 0.897, 0.6B 0.960, 1.7B 0.904, 4B 0.902) are set by seeds 0 and 2, whose shared step-0 partition merges business and tech; on the other three seeds all methods are within 0.008. The 0.6B's lead is one seed's outcome. A summary sits about one RMS radius from the centroid it replaces (0.98-1.08; CLINC150 0.89-1.08) but much farther in cosine (0.17-0.43 against 0.67-0.80); no duplicates, no empty clusters, no summary mentions the cluster. Cost: about 24 calls and 84-87k input tokens per seed, 27 / 46 / 87 s for 0.6B / 1.7B / 4B.
+
+**What it does not show.** That summaries beat numerical centroids here, or why BBC differs from CLINC150 (different data, embedding, prompt and 30-word member cut). No cluster-level analysis (5 clusters per seed).
+
+**Pending.** The member-selection ablation (random subset of whole articles instead of the first 30 words) was not run.
+
+### arXiv (3,035,644 abstracts, k = 171) ([`arxiv_status.md`](arxiv_status.md))
+
+### TO FILL: arXiv runs
+
+Placeholder. The 200k pilot (1.7B), the full-scale baselines (seed 0) and LSA at 200k are running now. Fill here: scores and times of the three baselines at full scale, the pilot's measured seconds per call and call count against the upper bound, the LSA row at 200k, and whether summaries move the centroids at that scale.
+
+**What arxiv_status.md already says (estimates, not results).**
+- The only scores so far are a 20k smoke run (one seed, a non-random prefix, 0.6B): ACC 0.2327 MiniBatchKMeans, 0.2553 sequential mini-batch, 0.2462 k-means, 0.2595 k-SLMmeans. It shows only that the pipeline works.
+- Baselines (k-means, mini-batch, sequential), full scale, CPU, about 1 hour for 3 seeds nominal (2.5 hours worst case), about 7 GB RAM with `copy_x: false`; seed 0 first.
+- LSA uses the 200k subsample: at full scale the sentence embeddings alone are 29 GB and segmentation is about 10 hours. About 45-80 minutes at 200k.
+- The current streaming schedule is out of reach (up to 259,920 calls, about 74 GPU-hours for the 0.6B).
+- Pilot: 200k, 1.7B, two steps, 20,000-row batches, at most 3,360 calls, about 1.3 GPU-hours idle (2.3 as logged).
+- Full summary run (#49): 1.7B, 150,000-row batches (21), two steps per batch, at most 7,182 calls, 2.9 GPU-hours idle, up to 4.9 as logged, one seed. This rests on the 1.7x estimate above and on CLINC150 rates; the pilot replaces it with a measured rate. Fewer batches and steps give the summaries fewer chances to move a centroid than in the paper's setup.
+
+## Reading across the requests (#50, preliminary)
+
+On CLINC150 a summary changes which members a cluster keeps in proportion to how well it covers them; whether that helps depends on the cluster's starting purity and is not predicted by the quality scores. The old 4B's low score went with duplicate and cluster-mentioning summaries; at step 1 swapping them for a better model's summaries closes the gap, but removing them over five steps does not recover the final score. The clearer prompt removes the 4B's drop and the size order together; with more verbatim copies and better scores, the data cannot separate the wording from the copying. Details and limits: [`synthesis.md`](synthesis.md) Section 9.
+
+## Pending / open items
+
+- Human hand check for #34: the student's job. The AI-rater results above are a stand-in, not a validation.
+- #49, the arXiv full run (Nov 30), and the arXiv placeholders above.
+- #33 replay of the clearer-prompt 0.6B and 1.7B (the synthesis uses them at method level only).
+- #35 part 3 (placeholder above) and the full-seed re-timing (deferred).
+- BBC member-selection ablation.
+- #37 re-run on the #31 protocol (optional; about 3.4-5.8 GPU-hours, not run).
+- Seeds 5-9 and Bank77 under the clearer prompt (#36); Nov 17 review.
+
+## Caveats that apply throughout
+
+- Five seeds: intervals have 4 degrees of freedom and are wide; no multiplicity correction (about 100 comparisons in #47 alone, about 120 strata in #50). A lone interval that excludes 0 is weak evidence.
+- One GPU (RTX 3060), one embedding encoder, one model family (Qwen3), one dataset for most claims (CLINC150); BBC has 5 clusters per seed; arXiv has no results.
+- Timing is contaminated: the #31 seconds are inflated about 1.7x (single-check estimate); batch sizes 8 / 4 / 1 mix size with batching; v2 seconds are not comparable with old ones and the v2 1.7B is not a clean timing; the guarded run overlapped niced CPU jobs for about its first hour; BBC CPU parts may be slightly inflated.
+- Replay exactness depends on re-embedding the summaries on the original device: a CPU encode differs by about 1e-6 per row and changes up to 9% of the old 4B's labels after a block.
+- Everything outside #47 and the prompt change is association; summary quality, geometry and members lost are mechanically related.
+- #34 scores have no human validation yet; the unsupported and generic flags are loose, and the AI-rater stand-in (two Claude Sonnet 5.5 instances) is not a human rating.
