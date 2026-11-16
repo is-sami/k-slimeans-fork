@@ -351,3 +351,37 @@ def test_paired_contrast_rejects_different_clusters():
                        {"method_id": "new", "seed": 0, "cluster": 1, "step": 1, "x": 1.0}])  # fmt: skip
     with pytest.raises(syn.JoinError):
         syn.paired_contrast(df, "old", "new", ["x"], {"all": lambda a: a["x"] > 0})
+
+
+def _pair_frame(per_seed: dict, extra_old: dict | None = None):
+    """`per_seed` maps seed -> list of (old x, new x) per cluster; `extra_old` adds a column to the old rows only."""
+    rows = []
+    for seed, clusters in per_seed.items():
+        for cluster, (x_old, x_new) in enumerate(clusters):
+            rows.append({"method_id": "old", "seed": seed, "cluster": cluster, "step": 1, "x": x_old, **(extra_old or {})})
+            rows.append({"method_id": "new", "seed": seed, "cluster": cluster, "step": 1, "x": x_new})
+    return pd.DataFrame(rows)
+
+
+def test_paired_contrast_interval_from_varying_seed_differences():
+    df = _pair_frame({0: [(0.0, 1.0)], 1: [(0.0, 2.0)], 2: [(0.0, 3.0)]})
+    row = syn.paired_contrast(df, "old", "new", ["x"], {"all": lambda a: a["x"] == 0.0}).iloc[0]
+    half = stats.t.ppf(0.975, 2) * 1.0 / np.sqrt(3)  # differences 1, 2, 3: mean 2, sd 1
+    assert row["diff"] == pytest.approx(2.0)
+    assert (row["lo"], row["hi"]) == pytest.approx((2.0 - half, 2.0 + half))
+    assert row["seeds_higher"] == 3
+
+
+def test_paired_contrast_drops_a_seed_where_the_subset_is_empty():
+    df = _pair_frame({0: [(1.0, 2.0), (5.0, 5.0)], 1: [(5.0, 5.0), (5.0, 5.0)], 2: [(1.0, 4.0), (5.0, 5.0)]})
+    row = syn.paired_contrast(df, "old", "new", ["x"], {"small": lambda a: a["x"] < 2.0}).iloc[0]
+    assert row["n_seeds"] == 2 and row["n_clusters"] == 2  # seed 1 has no cluster in the subset
+    assert row["diff"] == pytest.approx(2.0) and row["seeds_higher"] == 2
+
+
+def test_paired_contrast_takes_the_mask_from_the_old_rows_only():
+    df = _pair_frame({0: [(1.0, 2.0), (1.0, 9.0)], 1: [(1.0, 2.0), (1.0, 9.0)]}, extra_old={"flag": 1})
+    df.loc[df["method_id"] == "old", "flag"] = [1, 0, 1, 0]  # only the new rows lack the column entirely
+    assert df.loc[df["method_id"] == "new", "flag"].isna().all()
+    row = syn.paired_contrast(df, "old", "new", ["x"], {"flagged in old": lambda a: a["flag"] == 1}).iloc[0]
+    assert row["n_clusters"] == 2 and row["old"] == 1.0 and row["new"] == 2.0
