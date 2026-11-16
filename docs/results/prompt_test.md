@@ -234,7 +234,7 @@ The #31 rows are the old-prompt runs; "k-SLMmeans-v2" marks the clearer prompt. 
 | k-SLMmeans-v2 (Qwen3-4B) | 0.568 ± 0.010 | 0.760 ± 0.005 | 0.457 ± 0.012 | 1098.8 | 5 |
 
 Mean ± standard deviation over seeds. The s/seed column is not comparable across the old and clearer prompt, and the v2 1.7B
-figure is not a clean timing at all (Section 8.4). The k-means and LSA rows are from the #31 LSA run; neither depends on the prompt.
+figure is not a clean timing at all: its later seeds ran slowly while a foreign GPU user may have been present (Section 8.4). The k-means and LSA rows are from the #31 LSA run; neither depends on the prompt.
 
 Under the old prompt the means ranged from 0.511 to 0.570 ACC across sizes. Under the clearer prompt they range from 0.563 to 0.568.
 
@@ -289,9 +289,9 @@ For comparison, the same table under the old prompt (old larger minus old smalle
 - **Against k-means** all three v2 sizes are above on all three metrics with intervals that exclude 0, by 0.011 to 0.016 ACC.
   Under the old prompt that held only for the 1.7B (+0.018 [+0.004, +0.033]).
 - **Against LSA** no v2 size is separated on ACC or ARI (all intervals include 0). Only the 4B's NMI interval excludes 0
-  (+0.008 [+0.002, +0.014]); the 0.6B's NMI interval ends at -0.000.
+  (+0.008 [+0.002, +0.014]); the 0.6B's NMI lower bound is -0.0002.
 - **Size order under the clearer prompt.** On ACC and ARI no pair of sizes is separated: all six intervals include 0, and
-  the means are 0.563, 0.563 and 0.568. On NMI the 4B is ahead of the 0.6B and the 1.7B by 0.006 (lower bounds +0.000 and +0.002).
+  the means are 0.563, 0.563 and 0.568. On NMI the 4B is ahead of the 0.6B and the 1.7B by 0.006 (lower bounds +0.0004 and +0.002).
   That is a small difference, in one of three metrics, on 5 seeds, among nine uncorrected intervals, and it does not
   separate the 0.6B from the 1.7B. It is not read as an order. Under the old prompt every pair was separated on all three
   metrics (the 4B against the 0.6B on NMI only just, upper bound -0.001): the 1.7B was above the 0.6B, and the 4B was below both.
@@ -373,17 +373,27 @@ From `--cost-md` ([`prompt_test_cost.md`](prompt_test_cost.md), the six SLM rows
     about 1,500-1,530 MiB from 21:06:40, 2,309-2,841 MiB from 21:09:51 (peak 2,841 at 21:21:38, +1,625 MiB over baseline),
     and about 2,490-2,530 MiB from 21:32:48 to the end at 21:43:30.
   - *Per-seed times of the 1.7B.* The summarizer took 568, 590 and 622 s on seeds 0-2 (mean 593 s) and 965 and 941 s on seeds 3 and 4,
-    about 1.6 times longer, with about the same number of calls (697-711 on every seed) and the same tokens (11,188-11,284 output tokens on every seed). The first rise in the memory estimate
-    is in the last two minutes of seed 2. The 0.6B's seeds are all 360-382 s.
+    about 1.6 times longer, with about the same number of calls (697-711 on every seed) and the same tokens (11,188-11,284 output tokens on every seed).
+    From the cumulative `runtime_s`, seed 2 ran about 21:00:59 to 21:11:25. The first rise in the memory estimate (21:06:40, about +190 MiB) and
+    the jump at 21:09:51 therefore begin inside seed 2, which overlaps its last 4.7 minutes, and seed 2 is the slowest of the first three (622 s).
+    The slowdown shows clearly only from seed 3, about 5 minutes after the first rise. Seeds 0 and 1 (568 and 590 s, mean 579 s) are the
+    cleanest figure. The 0.6B's seeds are all 360-382 s.
   - *What this means.* The memory estimate counts every non-torch use of the card: other processes (the idle check lists Windows
     desktop processes on the card, with no memory attributed to them) and non-torch memory inside this process. It cannot tell which
     one grew. The slowdown at identical call counts, the same thing that inflated the #31 timings, makes another process on the
     card likely, but this is not shown. The replay was over by then (about 21:00). The v2 1.7B s/seed (744.4 ± 199.3) is therefore
-    **not** treated as a timing. Its first three seeds (mean 593 s) are the cleaner figure, and even those are one run, not a #35 measurement.
+    **not** treated as a timing. Seeds 0 and 1 (mean 579 s) are the cleanest figure, and even those are one run, not a #35 measurement.
+  - *A foreign GPU user was seen at the end.* At about 21:43 on 2026-11-12, as the run ended (21:43:30), a process from another project
+    (`test_p41.py`, in a different conda environment) was seen running on this GPU. Its start time was not logged, and nothing about it is
+    recorded in the run directory. So a foreign GPU user near the end of the run is confirmed in kind. It is consistent with the memory rise and the
+    slowdown, but its start, its memory and its overlap with the slow seeds were not measured. The one alternative the monitor cannot exclude is
+    non-torch memory growth inside the run's own process.
   - *Does it touch the scores?* Greedy decoding at a fixed batch size gives the same outputs (Section 4), so contention should change the time and
     not the summaries. The 1.7B's ACC on seeds 3 and 4 (0.565, 0.551) is in the range of the others (0.564, 0.564, 0.571). This is a reason to
-    expect no effect, not a test of it.
-- **Tokens are not affected by contention.** Output tokens per seed fall from 15,620 to 9,068 (-42%, 4B), 18,288 to 11,239 (-39%, 1.7B)
+    expect no effect, not a test of it. A check that the slow seeds do not drive the old-versus-v2 result for the 1.7B (v2 minus old, ACC per seed):
+    seed 0 -0.004, seed 1 -0.019, seed 2 +0.015, seed 3 -0.014, seed 4 -0.012. The mean is -0.003 on seeds 0-2 (v2 0.5665 against old 0.5692) and -0.013
+    on the slow seeds 3-4, against -0.012 on seeds 0-1. The slow seeds are not what makes the difference negative, and none of these subsets is large enough to separate from 0.
+- **Tokens are not affected by contention, and they are the only clean cost statement.** No time or cost saving from the clearer prompt was measured. Output tokens per seed fall from 15,620 to 9,068 (-42%, 4B), 18,288 to 11,239 (-39%, 1.7B)
   and 10,227 to 7,806 (-24%, 0.6B), in line with the pilot's -37.5%, -36% and -20% at step 1. Input tokens rise by 1.0%, 3.3% and 0.7%: the
   instruction is longer, and the members differ after step 1.
 - The call counts are 689, 701 and 698 against 707, 702 and 714. Calls are made for clusters whose summary has to be rewritten, so they depend on how the
@@ -440,8 +450,10 @@ What it does not show:
 - It does not give a prompt effect on cost (Section 8.4), and the v2 1.7B timing is not clean.
 - Truncation affected some clusters' prompts in all runs (Section 8.4).
 
-Per the reading rule of the issue, the 4B recovers to the level of k-means and above it, and to the level of the other two sizes. So the
-old size comparison was confounded by how the sizes read the prompt, and sizes have to be reported under both prompts.
+The issue's reading rule says: if the 4B recovers to the level of k-means or the 1.7B, the old size comparison was confounded by how each size read
+the prompt, and sizes have to be reported under both prompts. The 4B did recover (above k-means, level with the other sizes), so by that rule the
+sizes are reported under both prompts. That is the rule's conclusion, not a measured cause: the prompt changed several things at once (and the
+0.6B gained +0.022 with only 8% cluster talk before), so these runs do not isolate the cluster-talk failure.
 
 ### 8.7 What this means for the size trend (#36)
 
@@ -454,8 +466,8 @@ prompts on CLINC150 (ACC, mean ± std over seeds 0-4; differences are larger siz
 | Clearer (v2) | 0.563 ± 0.008 | 0.563 ± 0.007 | 0.568 ± 0.010 | +0.000 [-0.002, +0.003], 4/5 | +0.005 [-0.002, +0.012], 4/5 | +0.005 [-0.003, +0.012], 4/5 |
 
 - The shape of the size comparison on CLINC150 depends on the prompt: a non-monotone order with the 4B last under the old one, and no detectable ACC difference
-  between sizes under the clearer one. So the "missing size trend" of October is not a property of size alone. Part of it was the 4B reading
-  the old CLINC150 prompt as a request to describe the cluster.
+  between sizes under the clearer one. So the "missing size trend" of October is not a property of size alone: the size comparison on CLINC150 changes with the prompt wording. The data are consistent
+  with the 4B's cluster-talk failure under the old prompt being a cause, but the prompt changed several things at once, so they do not isolate it.
 - This does not establish a size trend either way. Under the clearer prompt the means rise by 0.005 from the 0.6B/1.7B to the 4B, with intervals that include 0 (NMI
   is the exception, +0.006), and the tests have no power to separate effects of that size. A size threshold is not supported, and neither is a flat line; the data are consistent with both a null and a small
   positive effect of the 4B.
@@ -468,7 +480,7 @@ prompts on CLINC150 (ACC, mean ± std over seeds 0-4; differences are larger siz
   (git 341e420, clean tree, GPU idle-checked; has `gpu.json` and `gpu_samples.csv`).
 - v2 0.6B: `results/clinc150_v2_qwen3-0.6b/20261112-200926` (git 341e420, clean tree, idle-checked, flat in-run monitor).
 - v2 1.7B: `results/clinc150_v2_qwen3-1.7b/20261112-204127` (git 341e420, clean tree, idle-checked at start; the in-run monitor shows
-  extra non-torch GPU memory from 21:09, Section 8.4, so use its seconds with care; the scores and summaries are unaffected as far as we know).
+  extra non-torch GPU memory from 21:09, Section 8.4, so use its seconds with care. A foreign GPU process was seen at the end of the run but not logged, Section 8.4. Greedy decoding should leave the scores and summaries unaffected, which was not tested; the per-seed check in 8.4 shows the slow seeds do not drive the result).
 - The old-prompt runs they pair with: `results/clinc150_lsa/20261027-174631`, `results/clinc150_qwen3-0.6b/20261027-190908`,
   `results/clinc150_qwen3-1.7b/20261027-202532`, `results/clinc150_qwen3-4b/20261027-221042`.
 
@@ -508,6 +520,6 @@ python scripts/surface_counts.py results/clinc150_v2_qwen3-4b/20261112-181256 re
     results/clinc150_qwen3-1.7b/20261027-202532 results/clinc150_qwen3-0.6b/20261027-190908 > docs/results/prompt_test_surface.md
 ```
 
-The first command without `--paired-*` (or `scripts/run_clinc150_prompt_v2.sh table`) prints the Section 8.1 table. The
+The first `aggregate_results.py` command prints the Section 8.1 table to stdout as well as writing the paired files (so does the same command without `--paired-*`, and so does `scripts/run_clinc150_prompt_v2.sh table`). The
 Lloyd iteration counts (Section 8.5) were read from each run's `trace.jsonl` (`last_n_iter`, `last_max_iter`). The concurrency
 figures in Section 8.4 come from `results/runq/status.txt` and `results/runq/logs/v2_small.log`, and from each run's `gpu.json` and `gpu_samples.csv`.
