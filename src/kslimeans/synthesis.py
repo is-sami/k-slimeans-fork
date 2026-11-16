@@ -790,3 +790,28 @@ def cross_section(df: pd.DataFrame, outcome: str = "purity") -> pd.DataFrame:
     props = [*QUALITY_PROPS, *GENERIC_PROPS, "n_flu_flags", "flag_not_fluent"]
     parts = [correlation_table(df, props, [outcome], controls) for controls in (None, ["log_n_members"])]
     return pd.concat(parts, ignore_index=True)
+
+
+def paired_contrast(df: pd.DataFrame, old: str, new: str, columns: list[str], subsets: dict, step: int = 1) -> pd.DataFrame:
+    """Two methods on the same clusters: per-seed means of `columns` over each subset, and their difference.
+
+    `old` and `new` are method ids of runs that start from the same partition, so (seed, cluster) names the same
+    members in both. `subsets` maps a name to a function of the `old` rows (indexed by seed and cluster) that returns a
+    boolean mask; the same clusters are then taken from `new`. Each row is one (subset, column): the mean over seeds of
+    `old`, of `new`, of their per-seed difference with its Student-t interval, and the seeds where `new` is higher.
+    """
+    keep = df[df["step"] == step]
+    a = keep[keep["method_id"] == old].set_index(["seed", "cluster"]).sort_index()
+    b = keep[keep["method_id"] == new].set_index(["seed", "cluster"]).sort_index()
+    if not a.index.equals(b.index):
+        raise JoinError(f"{old} and {new} do not cover the same (seed, cluster) pairs at step {step}")
+    rows = []
+    for name, rule in subsets.items():
+        mask = rule(a)
+        for col in columns:
+            per_seed = pd.DataFrame({"old": a[col][mask].groupby("seed").mean(), "new": b[col][mask].groupby("seed").mean()})
+            diff = per_seed["new"] - per_seed["old"]
+            iv = seed_interval(diff)
+            rows.append({"subset": name, "column": col, "n_clusters": int(mask.sum()), "old": per_seed["old"].mean(), "new": per_seed["new"].mean(),
+                         "diff": iv["mean"], "lo": iv["lo"], "hi": iv["hi"], "n_seeds": iv["n_seeds"], "seeds_higher": int((diff > 0).sum())})  # fmt: skip
+    return pd.DataFrame(rows)

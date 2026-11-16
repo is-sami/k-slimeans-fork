@@ -23,6 +23,12 @@ k-SLMmeans (Qwen3-4B),d_member_purity,within coverage x generic x unsupported,25
 k-SLMmeans (Qwen3-4B),lost_share,raw,251,750,0.442867,0.386218,0.499516,5,1,step 1
 k-SLMmeans (Qwen3-4B),lost_share,within coverage,251,750,-0.0339097,-0.0591824,-0.0086369,5,3.6,step 1
 k-SLMmeans (Qwen3-4B),lost_share,within coverage x generic x unsupported,251,750,-0.0712575,-0.0842563,-0.0582587,5,2.8,step 1
+k-SLMmeans-v2 (Qwen3-4B),d_member_purity,raw,322,750,-0.0217699,-0.0488832,0.00534345,5,1,step 1
+k-SLMmeans-v2 (Qwen3-4B),d_member_purity,within coverage,322,750,-0.01472,-0.0414712,0.0120312,5,3.8,step 1
+k-SLMmeans-v2 (Qwen3-4B),d_member_purity,within coverage x generic x unsupported,322,750,-0.00462288,-0.0248302,0.0155845,5,3.8,step 1
+k-SLMmeans-v2 (Qwen3-4B),lost_share,raw,322,750,-0.122275,-0.202302,-0.0422483,5,1,step 1
+k-SLMmeans-v2 (Qwen3-4B),lost_share,within coverage,322,750,0.00880854,-0.036711,0.0543281,5,3.8,step 1
+k-SLMmeans-v2 (Qwen3-4B),lost_share,within coverage x generic x unsupported,322,750,0.0106306,-0.0487648,0.0700259,5,3.8,step 1
 k-NLPmeans,d_member_purity,raw,25,3750,0.0158465,-0.00534032,0.0370333,5,1,all steps
 k-NLPmeans,d_member_purity,within coverage,25,3750,0.0175956,-0.0162293,0.0514205,5,1.2,all steps
 k-NLPmeans,d_member_purity,within coverage x generic x unsupported,25,3750,0.0176142,-0.0161741,0.0514026,5,1.2,all steps
@@ -47,3 +53,9 @@ k-SLMmeans (Qwen3-4B),d_member_purity,within coverage x generic x unsupported,12
 k-SLMmeans (Qwen3-4B),lost_share,raw,1276,3750,0.432166,0.399972,0.46436,5,1,all steps
 k-SLMmeans (Qwen3-4B),lost_share,within coverage,1276,3750,-0.0194577,-0.0263436,-0.0125717,5,5,all steps
 k-SLMmeans (Qwen3-4B),lost_share,within coverage x generic x unsupported,1276,3750,-0.0523266,-0.0786686,-0.0259845,5,8.8,all steps
+k-SLMmeans-v2 (Qwen3-4B),d_member_purity,raw,1618,3750,-0.0199604,-0.0323363,-0.00758448,5,1,all steps
+k-SLMmeans-v2 (Qwen3-4B),d_member_purity,within coverage,1618,3750,-0.0166583,-0.0270244,-0.00629211,5,4.2,all steps
+k-SLMmeans-v2 (Qwen3-4B),d_member_purity,within coverage x generic x unsupported,1618,3750,-0.0123476,-0.0224884,-0.00220675,5,7.6,all steps
+k-SLMmeans-v2 (Qwen3-4B),lost_share,raw,1618,3750,-0.128466,-0.150475,-0.106458,5,1,all steps
+k-SLMmeans-v2 (Qwen3-4B),lost_share,within coverage,1618,3750,-0.00756767,-0.0260479,0.0109126,5,4.2,all steps
+k-SLMmeans-v2 (Qwen3-4B),lost_share,within coverage x generic x unsupported,1618,3750,-0.00621317,-0.0263422,0.0139159,5,7.6,all steps

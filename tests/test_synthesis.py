@@ -329,3 +329,25 @@ def test_add_derived_scores_the_references():
     assert list(out["d_member_purity_vs_cf"].round(2)) == [0.2, -0.4]
     assert list(out["d_member_purity_vs_null"].round(2)) == [0.3, -0.1]
     assert list(out["cf_helped"]) == [0.0, 0.0] and list(out["helped"]) == [1.0, 0.0]
+
+
+def test_paired_contrast_compares_the_same_clusters_per_seed():
+    rows = []
+    for seed in (0, 1, 2):
+        for cluster, (flag, x_old, x_new) in enumerate([(1, 1.0, 3.0), (0, 2.0, 2.0)]):
+            rows.append({"method_id": "old", "seed": seed, "cluster": cluster, "step": 1, "flag": flag, "x": x_old + seed})
+            rows.append({"method_id": "new", "seed": seed, "cluster": cluster, "step": 1, "flag": flag, "x": x_new + seed})
+    rows.append({"method_id": "old", "seed": 0, "cluster": 0, "step": 2, "flag": 1, "x": 99.0})  # another step is ignored
+    df = pd.DataFrame(rows)
+    out = syn.paired_contrast(df, "old", "new", ["x"], {"all": lambda a: a["flag"] >= 0, "flagged in old": lambda a: a["flag"] == 1})
+    allrow, flagged = out.iloc[0], out.iloc[1]
+    assert (allrow["n_clusters"], allrow["old"], allrow["new"], allrow["diff"]) == (6, 2.5, 3.5, 1.0)
+    assert (flagged["n_clusters"], flagged["diff"], flagged["seeds_higher"], flagged["n_seeds"]) == (3, 2.0, 3, 3)
+    assert flagged["lo"] == flagged["hi"] == 2.0  # no variation across seeds
+
+
+def test_paired_contrast_rejects_different_clusters():
+    df = pd.DataFrame([{"method_id": "old", "seed": 0, "cluster": 0, "step": 1, "x": 1.0},
+                       {"method_id": "new", "seed": 0, "cluster": 1, "step": 1, "x": 1.0}])  # fmt: skip
+    with pytest.raises(syn.JoinError):
+        syn.paired_contrast(df, "old", "new", ["x"], {"all": lambda a: a["x"] > 0})

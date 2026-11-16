@@ -1,10 +1,10 @@
-# When do generated summaries help or hurt clustering? First-cut synthesis (issue #50)
+# When do generated summaries help or hurt clustering? Synthesis (issue #50)
 
-Status: **first cut, preliminary.** One analysis that joins summary quality (#34), centroid replacement (#33), clustering outcome and cost (#35) per cluster and per method. Everything here is an **association**; it does not say what causes what (that is #47, whose stage 1 is still running, so nothing from it is used). Written for the Nov 16 submission; the final version follows the Nov 17 review and the remaining runs (#18 BBC, #48 arXiv, #46 prompt v2), which the script takes as extra run directories.
+Status: **version 2, preliminary (Nov 16 progress report).** One analysis that joins summary quality (#34), centroid replacement (#33), clustering outcome and cost (#35) per cluster and per method. Version 1 was the first cut on the four October runs. This version adds the Qwen3-4B under the clearer prompt (#46) to every table that needs a #33 replay, and the other two clearer-prompt sizes to the method-level table only (they have no #33 replay yet). Sections 2 to 6 and the CSVs are descriptive **associations**. The only interventions in the project are #47's swaps (step 1) and its guarded run, and Section 9 keeps them apart from the rest. Not joined here: BBC (#18, `bbc.md`), arXiv (#48, nothing run) and the Nov 17 review.
 
 ## 1. What was joined
 
-`scripts/synthesis.py` (module `src/kslimeans/synthesis.py`) writes one row per (dataset, method, seed, summary step, cluster) to `results/synthesis/synthesis_per_cluster.csv` (gitignored, 16,540 rows x 111 columns; regenerate with the command in section 8). Its columns:
+`scripts/synthesis.py` (module `src/kslimeans/synthesis.py`) writes one row per (dataset, method, seed, summary step, cluster) to `results/synthesis/synthesis_per_cluster.csv` (gitignored, 27,790 rows x 123 columns; regenerate with the command in section 8). Its columns:
 
 | Family | Columns (source) |
 | --- | --- |
@@ -17,14 +17,17 @@ Status: **first cut, preliminary.** One analysis that joins summary quality (#34
 
 | Join | Rows | Matched | Left only | Right only |
 | --- | ---: | ---: | ---: | ---: |
-| #34 x #33 clusters, each of the 4 CLINC150 runs | 3,750 | 3,750 | 0 | 0 |
-| #33 clusters x #33 stale flags | 15,000 | 15,000 | 0 | 0 |
-| #34 x rebuilt after-block partition (outcome, majority) | 15,000 | 15,000 | 0 | 0 |
-| #34 x rebuilt cost rows | 16,540 | 16,540 | 0 | 0 |
-| #34 x step-1 references (counterfactual, shuffle null) | 3,000 | 3,000 | 0 | 0 |
-| cluster rows x run metrics (many to one) | 16,540 | 16,540 | 0 | n/a |
+| #34 x #33 clusters, each of the 5 CLINC150 runs with a #33 replay (the four #31 runs and the v2 4B) | 3,750 | 3,750 | 0 | 0 |
+| #34 x #33 clusters, v2 0.6B and v2 1.7B (no #33 replay yet) | 3,750 each | 0 | 3,750 each | 0 |
+| #33 clusters x #33 stale flags | 18,750 | 18,750 | 0 | 0 |
+| #34 x rebuilt after-block partition (outcome, majority) | 18,750 | 18,750 | 0 | 7,500 |
+| #34 x rebuilt cost rows | 27,790 | 27,790 | 0 | 0 |
+| #34 x step-1 references (counterfactual, shuffle null) | 3,750 | 3,750 | 0 | 1,500 |
+| cluster rows x run metrics (many to one) | 27,790 | 27,790 | 0 | n/a |
 
-The four BANKING77 runs (1,540 rows) have no #33 data and are kept with `has_diag == False`. The majority intent rebuilt from the logs equals #34's `majority_intent` in all 15,000 CLINC150 rows (asserted). Cost reconciliation against the logged totals (per seed): clusters sent equal the logged `n_calls` exactly, input tokens equal `input_tokens` exactly (tokens are rebuilt with the live `hf.fit_and_render` path, tokenizer only), and output tokens plus one EOS per call are within 15 tokens of `output_tokens` per seed, the residual #35 reports.
+The "right only" rows are the logged partitions and step-1 references that the script rebuilds for the two v2 runs without #33 data; they have no cluster rows to attach to and are not used (the join asserts that no #34 row is left without its partner where #33 exists). Nothing is dropped from the #34 side.
+
+The four BANKING77 runs (1,540 rows) and the v2 0.6B and v2 1.7B runs (7,500 rows) have no #33 data and are kept with `has_diag == False`: they enter the method-level table (Section 2) and nothing that needs the replay or an outcome. The majority intent rebuilt from the logs equals #34's `majority_intent` in all 18,750 CLINC150 rows with #33 data (asserted). Cost reconciliation against the logged totals (per seed; checked for the four #31 runs in version 1, not repeated for the v2 runs, whose costs here use the same rebuild): clusters sent equal the logged `n_calls` exactly, input tokens equal `input_tokens` exactly (tokens are rebuilt with the live `hf.fit_and_render` path, tokenizer only), and output tokens plus one EOS per call are within 15 tokens of `output_tokens` per seed, the residual #35 reports.
 
 **Exact versus replayed (#33 section 2).** The #33 columns come from a replay of the logged blocks that starts from the logged summaries re-embedded on the GPU, and that replay is exact: share of clusters where the replayed state agrees with the log (`synthesis_replay_consistency.csv`) is 100% in every cell, for every method and step, both for the replayed pre-replacement cluster having the logged members (steps 2-5) and for the replayed end-of-block size equalling the logged one (steps 1-5). So the replacement-time columns and the `*_end` columns of #33 are exact at every step, not only at step 1. `step1` still marks the step-1 rows; the tables below give **step 1** first and "all steps" as a check. The outcome columns come from the logged partitions at every step, and they, not the `*_end` columns, are the outcomes used here. (The first version of this analysis used CPU-encoded summaries, for which this was not true: the replayed pre-replacement cluster had the logged members in only 33-48% of the 4B's clusters at steps 2-5 and the end-of-block size matched for 48% at step 1, 0.6B 74%; #33 section 2 shows this was encoder noise. In the prose of this note, the only numbers that moved with the GPU embeddings are the step-1 empty-cluster counts and the number of defined step-1 correlations in section 3; in the committed tables the all-steps strata and correlation intervals also moved slightly. No reading changed.)
 
@@ -43,18 +46,50 @@ The four BANKING77 runs (1,540 rows) have no #33 data and are kept with `has_dia
 
 Left and middle: ACC and NMI against summarizer seconds (log scale; mean +/- sd over 5 seeds; same error-bar style as `rq2_clinc150_pareto.png`, k-means dashed). Right: ACC against mean nearest-summary share at the last step. Seconds are inflated (about 1.7x, shared GPU, batch 8/4/1; #35) and are only a rough cost axis; tokens are in the table.
 
-CLINC150, quality at the last summary step (`synthesis_clinc150_intent_methods.csv`):
+CLINC150, quality at the last summary step (`synthesis_clinc150_intent_methods.csv`; "old" is the #31 prompt, "v2" the clearer prompt of #46):
 
 | Method | nearest-summary share | specificity margin | unsupported share | generic | not fluent | ACC | NMI | dACC vs k-means [95% over seeds] | summarizer s | input / output tokens per seed |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | LSA | 0.796 | 0.250 | 0.000 | 0.00 | 0.01 | 0.560 | 0.752 | +0.009 [0.001, 0.017] | 15 | 0 / 0 |
-| Qwen3-0.6B | 0.607 | 0.146 | 0.128 | 0.17 | 0.29 | 0.541 | 0.747 | -0.010 [-0.018, -0.002] | 896 | 1.11M / 10.2k |
-| Qwen3-1.7B | 0.614 | 0.112 | 0.304 | 0.21 | 0.09 | 0.570 | 0.760 | +0.018 [0.004, 0.033] | 1,239 | 1.10M / 18.3k |
-| Qwen3-4B | 0.494 | 0.003 | 0.454 | 0.47 | 0.35 | 0.511 | 0.740 | -0.040 [-0.058, -0.022] | 1,855 | 1.12M / 15.6k |
+| old 0.6B | 0.607 | 0.146 | 0.128 | 0.17 | 0.29 | 0.541 | 0.747 | -0.010 [-0.018, -0.002] | 896 | 1.11M / 10.2k |
+| old 1.7B | 0.614 | 0.112 | 0.304 | 0.21 | 0.09 | 0.570 | 0.760 | +0.018 [0.004, 0.033] | 1,239 | 1.10M / 18.3k |
+| old 4B | 0.494 | 0.003 | 0.454 | 0.47 | 0.35 | 0.511 | 0.740 | -0.040 [-0.058, -0.022] | 1,855 | 1.12M / 15.6k |
+| v2 0.6B | 0.689 | 0.204 | 0.013 | 0.06 | 0.39 | 0.563 | 0.755 | +0.011 [0.005, 0.017]* | 373 | 1.12M / 7.8k |
+| v2 1.7B | 0.603 | 0.122 | 0.296 | 0.19 | 0.02 | 0.563 | 0.754 | +0.012 [0.005, 0.018]* | 737 | 1.14M / 11.2k |
+| v2 4B | 0.672 | 0.153 | 0.141 | 0.17 | 0.43 | 0.568 | 0.760 | +0.016 [0.009, 0.023]* | 1,094 | 1.13M / 9.1k |
 
-- **Quality does not rank ACC.** The 1.7B has the highest ACC and NMI with coverage about equal to the 0.6B's and a lower margin and more unsupported content than the 0.6B; LSA has the best quality scores and a smaller gain. The 4B, worst on coverage, margin, duplicates and unsupported content, is the furthest below k-means (-0.040 ACC [-0.058, -0.022], paired by seed), and the 0.6B is also below it (-0.010 [-0.018, -0.002]). These are uncorrected 5-seed intervals, so the 0.6B's is weak evidence. With four methods this is a description of co-occurrence, not a fit.
+\* The v2 runs carry no k-means reference of their own, so the script leaves their dACC blank. These three intervals are copied from `prompt_test.md` Section 8.2 (v2 minus the #31 k-means, paired by seed, same step-0 partitions). Uncorrected 5-seed intervals. Seconds of the v2 runs are not comparable with the old runs' (#46 Section 8.4), and the v2 1.7B's are not a clean timing.
+
+- **Quality does not rank ACC (old prompt).** The 1.7B has the highest ACC and NMI with coverage about equal to the 0.6B's and a lower margin and more unsupported content than the 0.6B; LSA has the best quality scores and a smaller gain. The 4B, worst on coverage, margin, duplicates and unsupported content, is the furthest below k-means (-0.040 ACC [-0.058, -0.022], paired by seed), and the 0.6B is also below it (-0.010 [-0.018, -0.002]). These are uncorrected 5-seed intervals, so the 0.6B's is weak evidence. With four methods this is a description of co-occurrence, not a fit.
+- **Under the clearer prompt the quality scores differ a lot and the ACC does not.** The three v2 runs score 0.563, 0.563 and 0.568 ACC (n = 5 seeds each), while their coverage (0.689, 0.603, 0.672), unsupported share (0.013, 0.296, 0.141) and generic share (0.06, 0.19, 0.17) are spread as widely as across the old runs. The v2 1.7B has the lowest coverage and the highest unsupported share of the three and the same ACC. Across all seven model runs ACC spans 0.511 to 0.570, and the only run clearly apart is the old 4B (worst on every quality score). Seven points from two prompts are a description, not a fit.
 - **Cost buys nothing monotone.** Every model size sends about 1.1M input tokens per seed (they share a tokenizer); output tokens differ (10k, 18k, 16k). LSA at about 1/60 to 1/120 of the summarizer time has a gain (+0.009 [0.001, 0.017]) that is not distinguishable from the 1.7B's (+0.018 [0.004, 0.033]; both intervals are uncorrected, 5 seeds). The 1.7B's is the only model gain whose interval excludes 0 in the positive direction; the 0.6B and 4B are below k-means.
 - BANKING77 (`synthesis_bank77_pareto.png`, approximate partition, no cost columns: those runs predate #30): ACC 0.449 / 0.440 / 0.436 / 0.444 for LSA / 0.6B / 1.7B / 4B against k-means 0.435; paired gains are +0.014 [0.006, 0.022] for LSA and not distinguishable from 0 for the three models (intervals span 0). Quality ranks the same way as on CLINC150 (nearest-summary share 0.80 / 0.74 / 0.68 / 0.68).
+
+### Same model, two prompts: the old and the clearer 4B at step 1
+
+The old 4B (#31) and the v2 4B (#46) start from the same step-0 partition in each seed, so cluster `c` of seed `s` has the same members in both: the 750 step-1 clusters (150 x 5 seeds) are paired. Table: mean over seeds, v2 minus old, with the 95% interval over the 5 seeds and the number of seeds where v2 is higher (`synthesis_prompt_contrast.csv`, from `scripts/synthesis_prompt_contrast.py`). **The prompt changed several things at once** (the task wording, "write only the question", the banned words, #46 Section 8.6), so this is a contrast between two runs, not the effect of one factor, and the v2 summaries are different texts in every cluster.
+
+| Step 1, 750 clusters | old 4B | v2 4B | v2 minus old [95%], seeds higher |
+| --- | ---: | ---: | --- |
+| duplicate summary | 12.5% | 0.8% | -0.117 [-0.155, -0.080], 0/5 |
+| mentions the cluster | 33.5% | 0% | -0.335 [-0.379, -0.290], 0/5 |
+| generic flag | 45.5% | 17.7% | -0.277 [-0.341, -0.214], 0/5 |
+| unsupported flag | 43.1% | 8.5% | -0.345 [-0.380, -0.311], 0/5 |
+| nearest-summary share (coverage) | 0.479 | 0.640 | +0.161 [+0.127, +0.195], 5/5 |
+| specificity margin | -0.005 | 0.135 | +0.140 [+0.109, +0.170], 5/5 |
+| verbatim copy of a member | 1.9% | 12.4% | +0.105 [+0.066, +0.145], 5/5 |
+| no "?" | 11.7% | 38.5% | +0.268 [+0.224, +0.312], 5/5 |
+| members lost | 0.435 | 0.236 | -0.199 [-0.239, -0.159], 0/5 |
+| `d_member_purity` | -0.032 | -0.009 | +0.023 [+0.007, +0.039], 5/5 |
+| helped (>= +0.1) | 14.3% | 10.8% | -0.035 [-0.065, -0.005], 1/5 |
+| harmed (<= -0.1) | 15.1% | 10.4% | -0.047 [-0.097, +0.003], 0/5 |
+| final ACC (all five steps, #46) | 0.511 | 0.568 | +0.056 [+0.039, +0.074], 5/5 |
+
+- **The summary properties changed in the direction #34 and #46 describe**: no cluster mentions, near-zero duplicates, higher coverage and margin, fewer unsupported flags. Two proxies went the other way: verbatim copies of a member rose from 1.9% to 12.4% (about 93 of the 750 step-1 clusters) and the missing "?" from 11.7% to 38.5% (#34 reads most of those as lowercase questions with the mark dropped).
+- **Cluster outcomes moved less than the properties.** Members lost fell by 0.20, but the mean change in members' purity moved from -0.032 to -0.009, and the share of helped clusters went down, not up (14.3% to 10.8%); harmed fell (15.1% to 10.4%, interval touches 0). The sign pattern of Section 5 stays: against the counterfactual the v2 4B raises mixed clusters (purity <= 0.4: +0.034 [0.006, 0.062]; old 4B +0.042) and lowers purer ones ((0.6, 0.8]: -0.047 [-0.079, -0.015]).
+- **Where the purity change moved.** In the clusters the old 4B flagged generic (63 to 75 per seed, 341 in all) it hardly moved (-0.015 to -0.010, +0.006 [-0.008, 0.019], 3/5) although their members lost fell from 0.75 to 0.34 and their coverage rose from 0.15 to 0.50. In the other 409 clusters it rose from -0.045 to -0.007 (+0.038 [0.010, 0.066], 5/5), and by purity before: > 0.8 -0.084 to -0.035 (+0.048 [0.026, 0.071], 5/5), (0.4, 0.8] -0.036 to -0.013 (+0.023 [-0.003, 0.049]), <= 0.4 +0.044 to +0.035 (-0.008 [-0.028, 0.011]). So most of the gain in this measure is in clusters whose old summaries were not flagged, and nothing in it is a repair of the flagged clusters. These are descriptive subsets chosen after seeing Section 5; no correction.
+- **Verbatim copies.** Of the 93 copy clusters at step 1 the coverage is higher (0.78 against 0.62) and fewer members are lost (0.15 against 0.25). A copied member makes the summary embedding a member embedding, which could contribute to the lower drift (0.92 against 1.16 RMS radii) and higher cosine to the old center (0.76 against 0.59). This was not tested.
+- **Run-level, v2 0.6B and 1.7B.** Verbatim copies are 33.2% of the v2 0.6B's summaries (14.6% in the old 0.6B), 0.8% of the v2 1.7B's (0.9% old) and 12.0% of the v2 4B's (1.4% old), all steps, from the same #34 scores. The three runs whose ACC rose with the new prompt (0.6B +0.022, 4B +0.056) are the two with more copies, and the one that did not (1.7B, -0.007 [-0.023, +0.010]) is not. Three pairs cannot separate that from the prompt's other changes, and no replay exists for the 0.6B and 1.7B.
 
 ## 3. Q1 Harm: which summary properties predict it?
 
@@ -79,6 +114,7 @@ Step 1, mean over seeds (Qwen3-0.6B / 1.7B / 4B; LSA in brackets where defined):
 - **What does predict the sign of the purity change is the purity before the step** (Q3 below): high-purity clusters lose purity, low-purity ones gain, for every Qwen model, far more than any summary property separates them.
 - **Representation columns.** Own-nearest "no" (the summary is nearer another cluster's old center): lost share 0.78 / 0.67 / 0.84 against 0.21 / 0.17 / 0.19 for "yes". Drift above 1.5 RMS radii: 0.90 / 0.75 / 0.93 lost. `empty_replacement` is rare except for the 4B (6 / 3 / 54 of 750 clusters for the 0.6B / 1.7B / 4B at step 1). None of the representation columns predicts `d_member_purity` once purity and size are controlled (|rho| <= 0.15).
 - **Summary of Q1.** The properties predict which members move, strongly and mostly by construction; they do not, in this data, predict whether the move improves or worsens the cluster's purity. A worse overall result appears at the method level (4B ACC -0.040, 0.6B -0.010), and the step-1 mean cluster `d_member_purity` is also negative for those two (-0.032 and -0.020, against LSA +0.003). These are different quantities (step-1 cluster means of a purity change against the final run's ACC after five steps) and are listed side by side, not linked; the cluster-level properties above do not explain the purity change, and what links a method's worse summaries to its worse ACC is not shown here (n = 4 methods; causes are #47's).
+- **The v2 4B (added).** The same picture at step 1: the rank correlation of members lost with nearest-summary share is -0.75 [-0.77, -0.74], with specificity margin -0.50 [-0.54, -0.46] and with the generic flag +0.40 [+0.33, +0.47] (mean over 5 seeds, interval over seeds). `d_member_purity` against 16 summary and geometry properties, partialling out purity and size, lies between -0.06 and +0.10, and all 16 intervals include 0. Its step-1 empty clusters are 2 of 750 (old 4B 54).
 
 ## 4. Q2 Fluency
 
@@ -107,7 +143,7 @@ At step 1, 12.7% / 12.3% / 14.3% of the 0.6B / 1.7B / 4B clusters are `helped` (
 
 **Two references.** The cluster-level change in members' purity has no meaning on its own: part of any change is what the same data would do anyway, and "purity before" is a maximum over the cluster's own members, so members tend to agree less with the majority of wherever they land than with the majority they came from, whatever moved them (plurality-selection asymmetry). So the change is compared with two references, both at step 1 (`synthesis_clinc150_intent_help_reference.csv`, figure `synthesis_clinc150_intent_help_reference.png`):
 
-- **No-replacement counterfactual** (#33's): plain Lloyd for the same 20 iterations from the exact step-0 state (`kslimeans.replay`; step 0 replays the logged partition exactly in all 20 cases, asserted). It does not depend on any summary or embedding. It is the same for every method of a seed and barely moves anything: the share of members lost is 0.012 and the mean `d_member_purity` +0.001 [-0.001, 0.002] (helped 0.4%, harmed 0.3%). So the purity changes below are not "what Lloyd would have done anyway"; they are produced by the replacement step plus the Lloyd block it starts. It is not dose-matched: it moves 1% of members, the summaries 26-44%.
+- **No-replacement counterfactual** (#33's): plain Lloyd for the same 20 iterations from the exact step-0 state (`kslimeans.replay`; step 0 replays the logged partition exactly for every run and seed, asserted). It does not depend on any summary or embedding. It is the same for every method of a seed and barely moves anything: the share of members lost is 0.012 and the mean `d_member_purity` +0.001 [-0.001, 0.002] (helped 0.4%, harmed 0.3%). So the purity changes below are not "what Lloyd would have done anyway"; they are produced by the replacement step plus the Lloyd block it starts. It is not dose-matched: it moves 1% of members, the summaries 26-44%.
 - **Random-shuffle null**: each cluster's members are moved at the cluster's own logged loss (its `lost_share`) to uniformly random other clusters (mean of 20 draws per cluster and seed). It is dose-matched and includes the plurality asymmetry: the mean `d_member_purity` is -0.12 (1.7B), -0.15 (0.6B), -0.22 (4B), and -0.04 for LSA, and negative in every purity stratum.
 
 Step 1, mean over seeds [95% interval over seeds] of the summary step's `d_member_purity` minus each reference (all strata, including LSA, in `synthesis_tables.md`):
@@ -128,46 +164,88 @@ Step 1, mean over seeds [95% interval over seeds] of the summary step's `d_membe
 - **Ceiling.** Clusters with purity above 0.9 are 22.5% of the step-1 clusters and cannot be helped by +0.1 (purity cannot exceed 1), so their `helped = 0` cells are mechanical, and only "harmed" is informative there. The same applies, to a lesser extent, to (0.8, 0.9].
 - **Size.** `d_member_purity` correlates with cluster size at step 1 (Spearman +0.13 LSA, +0.23 / +0.25 / +0.19 for the 0.6B / 1.7B / 4B; +0.05 to +0.15 after controlling for purity), because small clusters' purity before is inflated. Stratifying purity by size (<= 150, > 150 members; `purity_x_size` in the CSV) shows that the loss in the middle and upper purity strata is concentrated in small clusters: for purity (0.6, 0.8] the change minus the counterfactual is -0.09 / -0.11 / -0.145 for the small clusters and +0.00 / +0.02 / -0.03 for the large ones (0.6B / 1.7B / 4B), while the gain at purity <= 0.4 is larger in the large clusters (+0.06 / +0.07 / +0.05 against +0.04 / +0.04 / +0.04). Cells with fewer than 3 seeds contributing are blank (> 0.9 large clusters).
 - **The `label_top1` association is not an explanation.** The summary being nearest to its cluster's majority-intent name goes with fewer helped clusters (0.05 / 0.09 / 0.07 against 0.17 / 0.14 / 0.17) and less lost share, but purity is not controlled in that comparison, and such clusters are the already-good ones. It was not tested whether the summary naming the intent matters at a given starting purity.
+- **The v2 4B (added), step 1:** member-purity change minus the no-replacement counterfactual -0.009 [-0.023, +0.005] (old 4B -0.032 [-0.046, -0.019]), 10.8% helped and 10.4% harmed; by purity before, <= 0.4 +0.034 [+0.006, +0.062], (0.6, 0.8] -0.047 [-0.079, -0.015], > 0.9 -0.026 [-0.071, +0.019]; minus the shuffle null +0.103 (+0.188 old). The sign pattern is the same as for the three old models and smaller than the old 4B's, in a dose-matched sense: it loses 0.24 of its members against 0.44.
 - **Not done.** The question as posed in #50, whether the summary pulls the centroid toward a gold intent that k-means had split or merged, needs split and merge detection (which gold intents are spread over several clusters, which clusters merge several), and that is not in this first cut. What is shown is where purity rises and falls, not that a rise is a repaired split or merge. `d_jaccard_major` (overlap with the cluster's majority intent) is in the joined CSV for it.
 
 ## 6. Q5 Datasets
 
 - **CLINC150**: sections 2 to 5.
 - **BANKING77 (approximate)**. Only the last summary step is scored, against the FINAL partition (#34's caveat), so there is no outcome for the step, no #33 columns and no per-cluster cost rebuilt from logged data (the join carries rebuilt input tokens flagged `cost_approx`, which assume every non-empty cluster was sent). `synthesis_bank77_cross_section.csv`: cross-sectional rank correlation of the properties with the cluster's purity in the final partition (mean over seeds). Nearest-summary share +0.43 / +0.52 / +0.47 / +0.56 (LSA / 0.6B / 1.7B / 4B), specificity margin +0.45 / +0.52 / +0.32 / +0.43, max cosine to another summary -0.47 / -0.31 / -0.40 / -0.39, unsupported share 0.00 / -0.18 / -0.16 / -0.10; the correlations of coverage and margin with purity are similar in size for LSA and the three models, and partialling out cluster size shrinks them but not to 0 (coverage +0.38 to +0.47). Fluency proxies: -0.06 to +0.10 and mostly intervals including 0. This says that good-covering, specific summaries sit on pure clusters, which is partly circular (a pure cluster has a mean that a summary can sit near) and cannot tell harm from help.
-- **BBC (#18), arXiv (#48), prompt v2 (#46)**: not run; nothing here. Pass the run directories, their #34 per-cluster CSV and a #33 file that covers them to `scripts/synthesis.py`; runs absent from #33 are treated like BANKING77. Methods with the same label from different configs get `[config]` appended to the method id.
+- **Prompt v2 (#46):** the 4B is in every table; the 0.6B and 1.7B are in the method-level table only, until they have a #33 replay (the script treats them like BANKING77 for that, and Section 1 says what that means for the join).
+- **BBC (#18):** not joined here. It has its own write-up (`bbc.md`), five seeds, 500 articles and k = 5, which is too few clusters per seed for this per-cluster analysis. Its reading is in Section 9.
+- **arXiv (#48):** nothing has run at scale (`arxiv_status.md`); nothing here. To add a dataset, pass its run directories, its #34 per-cluster CSV and a #33 file that covers it to `scripts/synthesis.py`; runs absent from #33 are treated like BANKING77. Methods with the same label from different configs get `[config]` appended to the method id.
 
 ## 7. Limits
 
-- One model family (Qwen3), one prompt per dataset, 5 seeds (intervals have 4 degrees of freedom; a stratum that is empty in a seed drops that seed).
-- Replayed blocks and summary embeddings: the #33 columns (`drift`, `cosine`, `own_nearest`, `empty_replacement`, the `*_end` columns) use summary embeddings re-computed on the GPU and replayed blocks. The replay equals the logged blocks in every cluster at every step, so these columns are not noisy because of the replay. They do rest on one encode: a re-encode that differs at the 1e-6 level (another device or library version) changes up to about 9% of the 4B's labels after a block (#33 section 2), so the 4B's geometry strata are not robust to that. Quality and outcome columns come from the logged partitions and are not affected; the step-1 no-replacement counterfactual does not use summary embeddings and is exact.
+- One model family (Qwen3), two prompts on CLINC150 (old and clearer, #46) and one on BANKING77, 5 seeds (intervals have 4 degrees of freedom; a stratum that is empty in a seed drops that seed). BBC has 5 seeds, 500 articles and 5 clusters.
+- Replayed blocks and summary embeddings: the #33 columns (`drift`, `cosine`, `own_nearest`, `empty_replacement`, the `*_end` columns) use summary embeddings re-computed on the GPU and replayed blocks. The replay equals the logged blocks in every cluster at every step (also for the v2 4B), so these columns are not noisy because of the replay. They do rest on one encode: a re-encode that differs at the 1e-6 level changes up to about 9% of the old 4B's labels after a block (#33 section 2), so the old 4B's geometry strata are not robust to that. The noise-floor probe was not run for the v2 4B. Quality and outcome columns come from the logged partitions and are not affected; the step-1 no-replacement counterfactual does not use summary embeddings and is exact.
 - Associations in observational per-cluster data; summary quality, geometry and member loss are mechanically related (section 3). `d_member_purity` is purity against gold labels, one view of "better"; ACC/NMI/ARI are only available per run.
+- "Same model, two prompts" is a contrast of two runs whose prompts differ in several ways and whose summaries differ in every cluster. Its subsets (by the old run's flag, by purity) were chosen after seeing the tables above, and no correction was made for them.
+- The v2 0.6B and v2 1.7B have no #33 replay and appear only at the method level. The v2 runs have no k-means reference of their own in the joined data, so their dACC is quoted from `prompt_test.md`. The seconds of the v2 runs are not comparable with the old runs' and the v2 1.7B timing is not clean (#46 Section 8.4).
 - Per-cluster cost is tokens only: the logs have one timed `summarize_batch` call per step, so seconds per summary exist only as run totals (inflated, #35). Per-cluster tokens mostly follow cluster size; cost was not analysed per cluster beyond the method level.
-- No multiplicity correction; no hand check of #34's scores yet (pending), so the unsupported and generic flags carry their own known looseness.
-- The conclusions below are the first-cut reading and will be revisited with #47, the Nov 17 review and the remaining runs.
+- No multiplicity correction; no hand check of #34's scores yet (pending), so the unsupported and generic flags carry their own known looseness, and the "?" and verbatim-copy proxies are the ones the v2 summaries trip most.
+- Version 2 regenerated every committed `synthesis_*` table. The rows of the four October runs are unchanged except in the correlations of drift and cosine over all steps, where 35 (rho), 44 (lower bound) and 43 (upper bound) of 768 values moved, by at most 7.4e-5, and no interval changed whether it includes 0; the #33 per-cluster file was recomputed for this run, and the differences are float rounding in the replay. Counts, strata, methods and the help tables are identical to the printed digits.
+- Section 9 is the reading of all the evidence at this date. It will change with the Nov 17 review and the remaining runs (seeds 5-9, #33 for the other v2 sizes, arXiv).
 
 ## 8. Reproduce
 
 ```bash
 export HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES=""; R=../k-slimeans/results   # the logged runs, #33 files and cache
-python scripts/summary_quality.py $R/clinc150_lsa/20261027-174631 $R/clinc150_qwen3-0.6b/20261027-190908 \
-    $R/clinc150_qwen3-1.7b/20261027-202532 $R/clinc150_qwen3-4b/20261027-221042 $R/prelim_bank77_*/* \
-    --cache-dir ../k-slimeans/cache --out-dir results/summary_quality          # about 4 min wall (12 cores)
-# the #33 per-cluster files must come from the GPU-embedding replay (#33 section 9): first
-#   python scripts/embed_logged_summaries.py <run dirs> --cache-dir ../k-slimeans/cache \
-#       --out $R/replacement_diagnostic/summary_embeddings_cuda.npz --device cuda            # GPU, about 20 s
-#   python scripts/replacement_diagnostic.py <run dirs> --cache-dir ../k-slimeans/cache \
-#       --summary-embeddings $R/replacement_diagnostic/summary_embeddings_cuda.npz --out-dir <scratch dir> \
-#       --work-dir $R/replacement_diagnostic   # writes replacement_diagnostic_{clusters,stale}.csv
-python scripts/synthesis.py <the same run dirs> --cache-dir ../k-slimeans/cache \
+OLD="$R/clinc150_lsa/20261027-174631 $R/clinc150_qwen3-0.6b/20261027-190908 $R/clinc150_qwen3-1.7b/20261027-202532 $R/clinc150_qwen3-4b/20261027-221042"
+V2="$R/clinc150_v2_qwen3-4b/20261112-181256 $R/clinc150_v2_qwen3-0.6b/20261112-200926 $R/clinc150_v2_qwen3-1.7b/20261112-204127"
+python scripts/summary_quality.py $OLD $V2 $R/prelim_bank77_*/* \
+    --cache-dir ../k-slimeans/cache --out-dir results/summary_quality          # #34, about 12 min with the v2 runs
+# the #33 per-cluster files must come from the GPU-embedding replay (replacement_diagnostic.md section 10):
+#   python scripts/embed_logged_summaries.py $OLD --cache-dir ../k-slimeans/cache --out $R/replacement_diagnostic/summary_embeddings_cuda.npz --device cuda
+#   python scripts/embed_logged_summaries.py $R/clinc150_v2_qwen3-4b/20261112-181256 --cache-dir ../k-slimeans/cache \
+#       --out $R/v2_embed/summary_embeddings_cuda_v2_4b.npz --device cuda
+#   python scripts/replacement_diagnostic.py $OLD $R/clinc150_v2_qwen3-4b/20261112-181256 --cache-dir ../k-slimeans/cache \
+#       --summary-embeddings $R/replacement_diagnostic/summary_embeddings_cuda.npz $R/v2_embed/summary_embeddings_cuda_v2_4b.npz \
+#       --out-dir <scratch dir> --work-dir $R/v2_diag   # writes replacement_diagnostic_{clusters,stale}.csv to $R/v2_diag
+python scripts/synthesis.py $OLD $V2 $R/prelim_bank77_*/* --cache-dir ../k-slimeans/cache \
     --quality-clusters results/summary_quality/summary_quality_per_cluster.csv \
-    --diag-clusters $R/replacement_diagnostic/replacement_diagnostic_clusters.csv \
-    --diag-stale $R/replacement_diagnostic/replacement_diagnostic_stale.csv --out-dir docs/results   # about 7 min in the GPU-embedding rerun
+    --diag-clusters $R/v2_diag/replacement_diagnostic_clusters.csv \
+    --diag-stale $R/v2_diag/replacement_diagnostic_stale.csv --out-dir docs/results \
+    --joined-csv results/synthesis/synthesis_per_cluster.csv          # about 3 min on 2 threads
+python scripts/synthesis_prompt_contrast.py results/synthesis/synthesis_per_cluster.csv --out docs/results/synthesis_prompt_contrast.csv
+python -m pytest tests/test_synthesis.py -q
 ```
 
-With the CPU-encoded fallback (`summary_embeddings_cpu.npz`) the same commands run but `synthesis_replay_consistency.csv` is no longer 1.000 (the 4B's replayed blocks differ from the logs), and the step >= 2 and geometry columns for the 4B carry that noise.
+The two v2 runs without a #33 file are accepted as they are: the script joins them to #34 and cost only, and the join report lists their 3,750 rows each as left only. Leave them out of the run list to reproduce version 1 plus the v2 4B. With the CPU-encoded fallback (`summary_embeddings_cpu.npz`) the commands run, but `synthesis_replay_consistency.csv` is no longer 1.000 (the old 4B's replayed blocks differ from the logs), and the step >= 2 and geometry columns for the old 4B carry that noise.
 
-CPU only (the scripts hide the GPU; tokenizers load from the local cache). Outputs: `synthesis_tables.md` (all tables), `synthesis_join_report.csv`, `synthesis_replay_consistency.csv`, `synthesis_<dataset>_{methods,harm_strata,help_strata,help_reference,correlations,size_corr,fluency,fluency_partial,cross_section}.csv`, and the figures `synthesis_<dataset>_{pareto,harm_strata,help_strata,help_reference,fluency}.png`.
+CPU only (the scripts hide the GPU; tokenizers load from the local cache). Outputs: `synthesis_tables.md` (all tables), `synthesis_join_report.csv`, `synthesis_replay_consistency.csv`, `synthesis_prompt_contrast.csv`, `synthesis_<dataset>_{methods,harm_strata,help_strata,help_reference,correlations,size_corr,fluency,fluency_partial,cross_section}.csv`, and the figures `synthesis_<dataset>_{pareto,harm_strata,help_strata,help_reference,fluency}.png`.
 
 ## 9. What the evidence so far suggests about when summaries help or hurt (preliminary)
 
-On CLINC150, a summary changes which members a cluster keeps in proportion to how well it covers them and how specifically it describes them, and by construction: summaries that cover few of their own members or that duplicate another cluster's dissolve their cluster. Whether that movement helps or hurts a cluster's purity is, in this data, mostly a matter of where the cluster started: against plain Lloyd without a replacement (which barely moves anything at step 1) mixed clusters improve and pure ones get worse, for every model, and against random moves of the same size the summaries' moves are much better than random, while none of the coverage, genericity, unsupported-content, fluency or drift measures separates the improved from the worsened clusters once the starting purity and size are accounted for. Fluency adds nothing beyond coverage. At the method level the final ACC is below k-means for the 4B (-0.040, the method with the worst coverage and most duplicates, so these co-occur across four methods) and, weakly, the 0.6B (-0.010), and above it for the 1.7B (+0.018) and the extractive LSA control (+0.009), with no monotone relation to summary quality or to cost; the cluster-level data above do not show that the bad summaries are what lowered ACC, and causes are #47's question. A reading consistent with the cluster-level data, not tested here, is that summary-then-Lloyd steps help low-purity clusters and hurt pure ones, so that a method's net effect depends on how many of each it has. This rests on one model family, one prompt, five seeds and an association-only design, and should not be read as more.
+All numbers are CLINC150, 5 seeds, Qwen3, unless a bullet says otherwise. "Interventional" means the summary text or its use was changed by the experimenter; everything else is an association between logged properties and outcomes.
+
+**What a summary does to a cluster (associations, #33 and #34).**
+
+- **Members move in proportion to coverage, and this is built in.** At step 1 the share of a cluster's members lost correlates with nearest-summary share at -0.78 / -0.72 / -0.83 (old 0.6B / 1.7B / 4B) and -0.75 (v2 4B). It is largely a restatement of what the score measures (Section 3).
+- **Where members move, purity changes depend on where the cluster started, not on the summary scores.** Step-1 change in member purity minus plain Lloyd: mixed clusters (purity <= 0.4) +0.04 to +0.06 for the three old models and +0.034 for the v2 4B; pure ones lose (purity > 0.9: -0.04 to -0.09 old, -0.026 v2 4B, interval includes 0). Against 16 summary and geometry properties with purity and size controlled, `d_member_purity` stays within -0.15 to +0.15 for the old models and -0.06 to +0.10 for the v2 4B, and fluency adds nothing beyond coverage (Section 4).
+- **Old 4B: duplicate collapse (#33, exact replay, 30 of 30 fits per run).** At step 1 it has 18.8 duplicate summaries per seed (1.7B 0.8, v2 4B 1.2) and 10.8 emptied clusters after the replacement (0.6 and 0.4), and its logged step-1 partition is below plain Lloyd in ACC in 5 of 5 seeds (-0.0159; 1.7B +0.0106, 0 of 5 below; v2 4B +0.0024, 2 of 5 below). These are measurements of the run, not of why its final scores are low.
+
+**Where the evidence is interventional (#47, one model pair, one dataset).**
+
+- **Stage 1, step 1 only: better summaries in the flagged clusters close the gap.** Putting the 1.7B's summaries into the 4B's flagged clusters (43 to 56 of 150 per seed, those that duplicate another or mention the cluster) raises the step-1 ACC by +0.026 [+0.019, +0.034], 5 of 5 seeds, which is 99% of the 4B-to-1.7B gap (+0.0265). The same swap into the same number of random unflagged clusters changes it by -0.002 [-0.012, +0.007]; the difference is +0.029 [+0.015, +0.042]. The reverse (4B flagged summaries into the 1.7B) costs -0.025 [-0.041, -0.009] against the matched control. Flagged clusters may also be harder clusters, and only step 1 was tested.
+- **Stage 2, all five steps: removing the flagged summaries' influence does not recover the final score.** Starting flagged clusters from their k-means center at every step moves the 4B's final ACC by +0.009 [-0.006, +0.024] (4 of 5 seeds higher), NMI +0.001 [-0.007, +0.009], ARI -0.007 [-0.019, +0.006]; it stays 0.031 ACC below k-means (0 of 5 seeds). An effect of up to +0.024 is not excluded. The guard replaces a summary with no summary, not with a better one, and acts on a third of the clusters, so it does not test the stage-1 swap over five steps.
+- **Both together:** at step 1, the flagged summaries differ from the 1.7B's in a way that matters for ACC; whether that carries through to the 4B's final deficit is not shown.
+
+**The clearer prompt (#46 and the same-model contrast, Section 2).**
+
+- **It removes the old 4B's drop and lifts the 0.6B.** Final ACC v2 minus old, paired by seed: 4B +0.056 [+0.039, +0.074] (5 of 5 seeds; 0.568 against 0.511, now above k-means by +0.016 [+0.009, +0.023]), 0.6B +0.022 [+0.010, +0.033] (5 of 5), 1.7B -0.007 [-0.023, +0.010] (1 of 5).
+- **No size order remains.** v2 means 0.563 / 0.563 / 0.568 (0.6B / 1.7B / 4B), and all paired ACC intervals between sizes include 0; the old order (1.7B > 0.6B > 4B, differences 0.029 to 0.059) is gone. So the October size comparison on CLINC150 depended on the prompt. The prompt changed several things at once, so this does not isolate the cluster-mentioning failure, and the 4B's change in the intervention above (a swap of flagged summaries) is a different test.
+- **Between the two 4B runs the summary properties changed far more than the cluster outcomes.** Mentions 33.5% to 0%, duplicates 12.5% to 0.8%, coverage 0.48 to 0.64, members lost 0.44 to 0.24; but the mean member-purity change at step 1 moved only from -0.032 to -0.009 (+0.023 [+0.007, +0.039]) and the share of helped clusters fell from 14.3% to 10.8%.
+
+**Quality scores and the verbatim-copy caveat (#34).**
+
+- Across the seven CLINC150 model runs the quality scores (coverage 0.49 to 0.69, unsupported share 0.01 to 0.45) do not rank ACC (0.511 to 0.570); the old 4B is worst on coverage, margin, unsupported share and the generic flag and also lowest in ACC, and the v2 runs, with very different scores, share an ACC (0.563 to 0.568).
+- The clearer prompt raises the share of summaries that copy a cluster member word for word: 12% of the v2 4B's (451 of 3,750), 33% of the v2 0.6B's, 0.8% of the v2 1.7B's (old: 1.4%, 14.6%, 0.9%). Copies have no unsupported words by construction and a higher coverage (0.78 against 0.62 in the v2 4B at step 1), and a copied member makes the summary embedding a member embedding. So part of the better scores, and possibly of the gain in ACC, may come from copying rather than from description. The two runs that gained most from the prompt are the two with the most copies; the 1.7B has few and did not gain. Three runs; not tested, no replay for the 0.6B or 1.7B.
+
+**BBC (#18; 500 articles, k = 5, 5 seeds, `bbc.md`).**
+
+- In the TF-IDF space the mean ACC is k-means 0.788, LSA 0.839, 0.6B 0.851, 4B 0.854, 1.7B 0.873, so every summary method is above k-means, but 2 of the 30 paired intervals exclude 0 (1.7B against k-means in ARI, +0.125 [+0.007, +0.243]; 1.7B against LSA in NMI) and the seed spread (0.02 to 0.08) is as large as the gaps. Size does not order the models.
+- In the dense (MiniLM) space the means (k-means 0.866, LSA 0.897, 0.6B 0.960, 1.7B 0.904, 4B 0.902) are carried by seeds 0 and 2, whose shared step-0 partition merges two topics; on the other three seeds all methods are within 0.008 of each other, and the 0.6B's lead is one seed's outcome (seed 0).
+- BBC has no cluster-level join here; it shows that a summary-based method does not lose to k-means on this dataset, not why.
+
+**What this adds up to.** On CLINC150 a summary changes which members a cluster keeps in proportion to how well it covers them; whether that helps depends on the cluster's starting purity and is not predicted by the quality scores. The 4B's low final ACC under the old prompt went with duplicate and cluster-mentioning summaries; at step 1, replacing those summaries with a better model's closes the gap to that model, while removing them from all five steps does not recover the final score. A clearer prompt removes the 4B's drop and the size order together, with its quality scores rising but with more copied members, which this analysis cannot separate from the better wording. That is the reading these data support. It rests on one model family, one dataset for the cluster-level analysis, five seeds, and, apart from #47, association alone.

@@ -188,7 +188,7 @@ def plot_pareto(table: pd.DataFrame, dataset: str, path: Path) -> None:
                 continue
             ax.errorbar(r[xcol], r[ycol], yerr=r[f"{ycol}_sd"], xerr=None if xcol == "coverage_nearest" else r[f"{xcol}_sd"],
                         color=colors[r["method_id"]], marker="o", elinewidth=1, capsize=2, linestyle="none")  # fmt: skip
-            ax.annotate(r["method_id"].replace("k-SLMmeans ", "").replace("k-NLPmeans", "LSA"), (r[xcol], r[ycol]),
+            ax.annotate(r["method_id"].replace("k-SLMmeans-v2 ", "v2 ").replace("k-SLMmeans ", "old ").replace("k-NLPmeans", "LSA"), (r[xcol], r[ycol]),
                         textcoords="offset points", xytext=(6, 5), fontsize=8, color=colors[r["method_id"]])  # fmt: skip
         ax.axhline(table[kcol].mean(), color=KMEANS_COLOR, linestyle="--", linewidth=1, label="k-means")
         ax.set_ylabel(ylabel)
