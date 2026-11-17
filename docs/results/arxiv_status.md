@@ -1,15 +1,23 @@
 # arXiv at full scale: status for the November 16 submission (#48)
 
-This is a progress status, not a results report. The only scores in it are from the earlier 20k smoke run. Everything else is an estimate, and each estimate says what it is based on. Nothing at full scale has been run: the baselines, the pilot and the LSA preprocessing all wait for approval.
+This is a progress status, not a results report. Every score below is from one seed, so there are no intervals, and none of the gaps between methods is evidence of a difference.
+
+**Status (Nov 16, evening).** Run tonight, one seed (0) each, on the same code (git 341e420), as one queue step starting about 18:00 and ending 19:41:
+
+- the three baselines at full scale (3,035,644 abstracts, k = 171), section 2.4: finished;
+- the pilot, k-SLMmeans with Qwen3-1.7B on the 200k subsample, with the three baselines on the same 200k rows, section 5.1: finished;
+- LSA (k-NLPmeans) on the 200k subsample, section 5b: finished.
+
+The pipeline ran end to end at 200k, and the cheap methods ran at 3.0M rows. The summary method has not been run at full scale, and nothing here says how it behaves there (that is #49). The three jobs overlapped on one box, so every time in this file is an upper bound, not an idle-machine figure (section 5.1).
 
 ## TL;DR
 
-- **Baselines at full scale** (3,035,644 abstracts, k = 171, seeds 0-2) are ready to run as a CPU job, `configs/arxiv_full_baselines.yaml`. Expected: about 5.7 GB steady (X plus interpreter), up to about 7 GB during `kmeans`; the logged `peak_rss_mb` may read about 7.5-8 GB at load because it counts the clean mapped float16 pages touched while X is filled. Stop if it passes 10 GB. About 1 hour (worst case about 2.5 hours). Full-batch k-means fits the 15 GB box only with `copy_x: false`; with sklearn's default copy it would need 11-13 GB and is not safe.
+- **Baselines at full scale** (3,035,644 abstracts, k = 171), seed 0 only, ran as a CPU job (`configs/arxiv_full_baselines.yaml`, section 2.4): ACC 0.260 / 0.275 / 0.264 for minibatchkmeans / seqminibatchkmeans / kmeans, 54 s to 12.4 min each, `peak_rss_mb` 9,491 at the `kmeans` row (the estimate was about 7 GB, the stop rule 10 GB; it ran beside the pilot). The memory guard did not fire. Seeds 1-2 were not run. Full-batch k-means fits the 15 GB box only with `copy_x: false`; with sklearn's default copy it would need 11-13 GB and is not safe.
 - **LSA (k-NLPmeans) should use the 200k subsample, not the full corpus.** At full scale the sentence embeddings alone are 29 GB in float32 and segmentation is about 10 hours on one CPU core.
 - **The current streaming schedule is out of reach**: up to 259,920 summarizer calls, about 74 GPU-hours with Qwen3-0.6B and 103 with Qwen3-1.7B.
 - **Recommended for the full summary run (#49): Qwen3-1.7B, 150,000-row batches (21 batches), two summary steps per batch.** At most 7,182 calls, **2.9 GPU-hours if the card is idle, up to 4.9 if it is as slow as during the CLINC150 runs.** The idle figure divides the logged rates by 1.7, which rests on a single BANKING77 re-timing (185 s against 105-115 s), so treat the range, not 2.9 alone, as the budget until the pilot measures the real rate.
-- **LSA** (`configs/arxiv_sub200k_lsa.yaml`): 200k subsample, about 45-80 minutes (spaCy dominates), GPU only for the MiniLM sentence embedding.
-- **Pilot** (`configs/arxiv_sub200k_pilot.yaml`): the same model and steps on the 200k subsample with 20,000-row batches, at most 3,360 calls, about 1.3 GPU-hours idle (2.3 as logged). It measures the real per-call cost on arXiv prompts, which this estimate has only from CLINC150 and one smoke run.
+- **LSA** (`configs/arxiv_sub200k_lsa.yaml`): 200k subsample, ran in 55 min of sentence preprocessing plus 39 s of clustering (estimate 45-80 min), ACC 0.269 / NMI 0.538 / ARI 0.181. Its GPU check found the card busy (the pilot), so its timings are inflated.
+- **Pilot** (`configs/arxiv_sub200k_pilot.yaml`): the same model and steps on the 200k subsample with 20,000-row batches, at most 3,360 calls. k-SLMmeans reached ACC 0.266 / NMI 0.535 / ARI 0.175 in 5,885 s, against 0.274 / 0.542 / 0.171 for k-means on the same rows (n = 1 each; not a difference). That is 1.75 s per scheduled (maximum) call, and it is an upper bound on the idle-card cost because CPU jobs ran alongside. At that rate the #49 schedule is at most about 3.5 GPU-hours, not 2.9 (section 5.1).
 
 ## 1. What exists
 
@@ -81,6 +89,22 @@ Extrapolated from the smoke run's baseline timings (20k rows, k = 149) by work: 
 | `kmeans` | 1.29 s | ~4-30 min | one Lloyd iteration is 394 GFLOP; same iteration count as the smoke run gives 3.7 min, a few times more iterations is typical at 150x the rows |
 
 Three seeds: about 45-60 minutes nominal, about 2.5 hours worst case, plus a few minutes to read 2.3 GB and convert it. Run seed 0 first (`--set seeds=[0]`), check the RSS and time, then the other two.
+
+### 2.4 Results (seed 0)
+
+Run: `scripts/run_streaming.py configs/arxiv_full_baselines.yaml --set 'seeds=[0]'`, 3,035,644 abstracts, k = 171, `max_batch_size` 10,000, started 17:59, finished about 18:14, exit code 0. One seed, so no intervals.
+
+| Baseline | ACC | NMI | ARI | runtime | `peak_rss_mb` (after the row) | estimate in 2.2 / 2.3 |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `minibatchkmeans` | 0.2600 | 0.5304 | 0.1636 | 134.4 s | 6,688 | 6-7 GB; 2-13 min |
+| `seqminibatchkmeans` | 0.2752 | 0.5297 | 0.1758 | 53.5 s | 6,688 | 5.7-6 GB; 1-3 min |
+| `kmeans` (`copy_x: false`) | 0.2645 | 0.5347 | 0.1643 | 746.8 s (12.4 min) | 9,491 | about 7 GB; 4-30 min |
+
+- **Runtimes** fall inside the estimated ranges (seqminibatchkmeans at the low end, kmeans in the lower half).
+- **Peak RAM:** `peak_rss_mb` is the process high-water mark, so the first two rows share one value. The 6,688 MB at the first row is inside the 7.5-8 GB load allowance. The 9,491 MB at the `kmeans` row is 2.5 GB above the 7 GB estimate and under the 10 GB stop rule. The cause was not investigated, so the 7 GB estimate for `copy_x: false` is too low by about that much.
+- **Memory guard:** `results/runq/logs/memguard.log` shows `guard start` at 18:01:24 and `guard end` at 18:15:15, with no kill and no low-memory line. The job ended on its own, exit code 0.
+- **Not run:** seeds 1-2 and the 150k-batch sequential baseline from section 6.
+- **Reading:** the three baselines are within 0.015 ACC and 0.005 NMI of each other on one seed. The full-scale numbers are not comparable with the 200k numbers below (different data, k = 171 against 168, and `seqminibatchkmeans` used 10k-row batches here and 20k there).
 
 ## 3. LSA (k-NLPmeans) feasibility
 
@@ -157,9 +181,39 @@ If the card is as slow as during the CLINC150 runs (`--gpu-slowdown 1`), multipl
 - **What it settles:** the real seconds per call and per input token at arXiv prompt lengths for the 1.7B (the one number the estimate rests on), the real call count against the upper bound (memo hits, empty clusters), the cost fields of #30, and a first look at whether summaries move the centroids at 200k.
 - **What it does not match:** the pilot has 10 batches of 20k rows; the full run has 21 batches of 150k. The per-call cost carries over, the batch dynamics do not.
 
+### 5.1 Pilot results (seed 0)
+
+Run `20261116-175906`, git 341e420, exit code 0 (queue step total 6,120 s). 200,000 abstracts, k = 168, ten batches of 20,000, two summary steps per batch, Qwen3-1.7B at summarizer batch size 4, `eval_assign: lloyd1`. One seed, so no intervals. All five methods below are on the same 200k rows:
+
+| Method | ACC | NMI | ARI | runtime |
+| --- | ---: | ---: | ---: | ---: |
+| `minibatchkmeans` | 0.2468 | 0.5301 | 0.1534 | 83.7 s |
+| `seqminibatchkmeans` (20k batches) | 0.2536 | 0.5264 | 0.1682 | 1.8 s |
+| `kmeans` | 0.2737 | 0.5421 | 0.1713 | 118.4 s |
+| k-SLMmeans (Qwen3-1.7B) | 0.2663 | 0.5355 | 0.1746 | 5,884.7 s (98 min) |
+| k-NLPmeans (LSA, section 5b) | 0.2694 | 0.5383 | 0.1809 | 3,357.8 s, see 5b |
+
+The k-SLMmeans row ranks below `kmeans` on ACC and NMI and above it on ARI. With one seed there is no way to tell these gaps from seed-to-seed variation, so this is not evidence for or against the summaries. The pipeline ran end to end; that is the result.
+
+**Cost.** `run_streaming.py` did not record the cost fields of #30 (calls, input tokens, output tokens, summarizer seconds) in `metrics.jsonl` for this run; the row carries only `runtime`. So the call count, the token counts and the summarizer seconds are not measured. What the run does give:
+
+- All 168 clusters were non-empty in all 10 batches (`summaries.jsonl`: 168 summaries per batch), so the call upper bound of 3,360 is the number of scheduled calls. Memo hits could make the real count lower; that is not logged.
+- The k-SLMmeans `runtime` is 5,884.7 s, including 8.1 s of embedding and the CPU k-means refits (the estimate for those is at most about 2 minutes). Taking all of it as summarizer time: **1.75 s per scheduled call**, **0.81 ms per input token** at the 2,163 tokens per call estimated in 4.1 (the tokens are the estimate, not logged).
+- The estimate this calibrates: 3,360 calls at 1.43 s (idle-equivalent) is 1.33 h and 2.43 s (as logged) is 2.3 h. The measured 1.64 h lies between them, closer to the idle figure. It equals a slowdown divisor of about 1.39 where the estimate used 1.7.
+- **Concurrency, so this rate is an upper bound.** The pilot did not have the machine to itself. The full-scale baselines ran next to it until about 18:14 (multi-core k-means, up to 9.5 GB), then LSA ran from about 18:15 to 19:11 (spaCy on one core, then a short MiniLM embedding that shared the card), and some thread-limited doc work ran at times. Its seconds, and the seconds per call, are therefore an upper bound on what an idle machine gives, not an idle-card measurement. The GPU idle check passed at 17:59 (1,013 MiB in use, 2 % utilization), and the pilot's monitor (`gpu.json`, `gpu_samples.csv`, 1,212 samples at 5 s) recorded 1,308 MiB of memory on average and 1,609 MiB at most that did not belong to the pilot's torch process, in a total peak of 7,729 MiB; mean utilization 83 %.
+- **Implication for #49** (`scripts/estimate_stream_cost.py --gpu-slowdown 1.3885`, so that the 1.7B costs the measured 0.81 ms per token): (d4), 150k batches, two steps, 7,182 scheduled calls, comes to **about 3.5 GPU-hours** (4.9 at the as-logged rate, 2.9 in the earlier idle-equivalent estimate). So plan on 3.5 h as a ceiling for one seed, and treat 2.9 h as no longer supported. The earlier rule said to drop to one summary step if the rate is above about 1.7 s per call; the measured 1.75 s is at that line, and it is inflated by the concurrent jobs, so this does not by itself decide it. An idle-card rerun of a few batches would settle it, and logging the cost fields would make the call count a measurement.
+
+**Truncation.** The log carries one warning, from `HFSummarizer`: a cluster's rendered prompt exceeded `max_input_tokens=4096` and 1 of 10 texts was dropped. The warning is issued once per summarizer instance, so at least one cluster and one text were affected and the real count may be higher; it is not logged. The 300-prompt sample in 4.1 found none over the limit, so these are rare outliers.
+
+**GPU check and monitor.** `require_idle: fail` passed (above). The monitor recorded no sampling errors. The pilot's peak GPU memory was 7,729 MiB, inside the 7 GB or a little more expected for the 1.7B, plus the 1 GB the card already held.
+
+**Process memory.** `peak_rss_mb` was 5,110 MB for the whole process, above the "about 3 GB" in section 5.
+
+**Distance columns.** k-SLMmeans logged `sum_cen_dist` = `sum_sum_dist` = 0.870 (k-NLPmeans 0.836), and `cen_sum_dist` equals `cen_cen_dist` in every row. The two summary columns are identical, which suggests they are not independent measurements; they are not interpreted here.
+
 ## 5b. LSA on the 200k subsample
 
-`configs/arxiv_sub200k_lsa.yaml`: k-NLPmeans (extractive LSA summaries) on the 200k subsample with the pilot's schedule (20k-row batches, two summary steps per batch, `force_context_length: 10`, seed 0), so there is an extractive baseline at that scale. It has no baselines of its own; the pilot run has them, and `scripts/aggregate_results.py` tabulates the two run directories together.
+`configs/arxiv_sub200k_lsa.yaml`: k-NLPmeans (extractive LSA summaries) on the 200k subsample with the pilot's schedule (20k-row batches, two summary steps per batch, `force_context_length: 10`, seed 0), so there is an extractive baseline at that scale. It has no baselines of its own; the pilot run has them (a different run directory), and `scripts/aggregate_results.py` tabulates the two run directories together.
 
 | Stage | Where | Estimate |
 | --- | --- | --- |
@@ -171,13 +225,26 @@ If the card is as slow as during the CLINC150 runs (`--gpu-slowdown 1`), multipl
 **Total about 45-80 minutes**, almost all of it spaCy, plus about 3 GB of RAM (sentence text 0.2 GB as raw characters, about 0.5 GB as Python strings, and 1.9 GB of float32 embeddings). The embedding step uses the GPU (MiniLM), so this run needs approval like the others; it is light (a few hundred MB of VRAM) but should not overlap with the pilot, whose timing needs an idle card. The first run builds the sentence cache; run it before or after the pilot, not during.
 
 ```
-HF_HUB_OFFLINE=1 PYTHONPATH=$PWD/src KSLIMEANS_DATA_DIR=/home/cooper/mst/clusteralgs/k-slimeans/data \
-  /home/cooper/mst/clusteralgs/summaryCentroids/.venv/bin/python -u scripts/run_streaming.py configs/arxiv_sub200k_lsa.yaml
+HF_HUB_OFFLINE=1 PYTHONPATH=$PWD/src KSLIMEANS_DATA_DIR=<path to the data directory> \
+  python -u scripts/run_streaming.py configs/arxiv_sub200k_lsa.yaml
 ```
+
+### 5b.1 Results (seed 0)
+
+Run `20261116-181519`, exit code 0, k-NLPmeans on the 200k subsample, k = 168, pilot schedule. It was queued behind the full baselines and so started at about 18:15, while the pilot was running (against the advice above, which asked for no overlap).
+
+| Method | ACC | NMI | ARI |
+| --- | ---: | ---: | ---: |
+| k-NLPmeans | 0.2694 | 0.5383 | 0.1809 |
+
+- **Time:** sentence corpus (spaCy segmentation and MiniLM embedding of 1.26 M sentences) 3,319 s (55 min), the rest of the method 38.7 s. The estimate was 45-80 min in all.
+- **Inflated timings:** the GPU idle check warned that the card was busy (7,149 MiB in use, 96.5 % utilization, 138.6 W: the pilot), so `require_idle: warn` let it run and the embedding time is inflated. The spaCy part ran on a CPU shared with the other jobs. Neither time is an idle-machine figure.
+- **RAM:** `peak_rss_mb` was 8,075 MB, against the 3 GB estimated above. Not investigated.
+- **Reading:** compare it only with the other 200k rows in 5.1. It is within 0.01 of `kmeans` and k-SLMmeans on ACC and NMI and highest on ARI, on one seed; that is a statement about this run, not a ranking.
 
 ## 6. What is left
 
-- **Approvals:** the baselines run (and the 150k-batch sequential baseline), the pilot run and the LSA run (commands in the pull request description and above). The LSA run uses the GPU only for the MiniLM sentence embedding.
+- **Done tonight:** the seed-0 baselines at full scale, the pilot and LSA at 200k. **Not done:** seeds 1-2 at full scale, the 150k-batch sequential baseline (below), an idle-card timing of the summarizer, and the logged cost fields (calls, tokens, summarizer seconds), which `run_streaming.py` did not write for the pilot. #49 (the full summary run, Nov 30) should log them, and should run on an idle machine so its rate is not an upper bound.
 - **#49:** the full summary run needs about 8 GB for the vectors and texts together (4.7 GB + about 3.3 GB of Python strings) before sklearn's buffers. The final evaluation step `assign_to_centroids(..., "lloyd1")` fits `KMeans(max_iter=1)` on the full X, which makes a second 4.7 GB copy; at full scale use `eval_assign: nearest` (chunked, no copy) or add `copy_x=False` there. Not changed here because `lloyd1` reproduces upstream's evaluation.
 - **Aggregation:** `aggregate_runs` (and so `scripts/aggregate_results.py`) now accepts a baseline-only run directory, so the full-scale baselines can be tabulated alone or next to a summary run. The streaming runner's `runtime` column is read as `runtime_s`.
 - **Like-for-like baseline for the recommended schedule (run it too).** The baselines config uses 10k batches, while the recommended summary run uses 150k batches, and `seqminibatchkmeans` makes one `partial_fit` per batch. 10k batches is the stronger baseline; the like-for-like one has the same 21 batches:
@@ -189,7 +256,7 @@ HF_HUB_OFFLINE=1 PYTHONPATH=$PWD/src KSLIMEANS_DATA_DIR=/home/cooper/mst/cluster
   ```
 
   CPU only, X is the same 4.7 GB (about 6 GB peak), and 21 `partial_fit` calls of 150k rows each cost about the same total work as the 10k run, so about 1-3 minutes per seed. Only `seqminibatchkmeans` depends on the batch size in this way; `minibatchkmeans`' `batch_size` is its SGD step and `kmeans` ignores it, so they need not be repeated. Report both seq rows and say which batch size each used.
-- **LSA on the 200k subsample:** `configs/arxiv_sub200k_lsa.yaml`, section 5b; not run.
+- **LSA on the 200k subsample:** `configs/arxiv_sub200k_lsa.yaml`, section 5b.1; done, one seed, timings inflated by overlap.
 
 ## Reproducing the numbers
 
@@ -199,6 +266,11 @@ python scripts/estimate_stream_cost.py                                          
 python scripts/estimate_stream_cost.py --gpu-slowdown 1                          # as logged
 python scripts/estimate_stream_cost.py --n-rows 20000 --k 149 --option 5000:5    # the smoke-run check
 python scripts/estimate_stream_cost.py --n-rows 200000 --k 168 --option 20000:2  # the pilot
+python scripts/estimate_stream_cost.py --gpu-slowdown 1.3885                     # the pilot's measured rate, for #49
+python scripts/run_streaming.py configs/arxiv_full_baselines.yaml --set 'seeds=[0]'   # section 2.4 (CPU)
+python scripts/run_streaming.py configs/arxiv_sub200k_pilot.yaml                      # section 5.1 (idle GPU)
+python scripts/run_streaming.py configs/arxiv_sub200k_lsa.yaml                        # section 5b.1
+python scripts/aggregate_results.py results/arxiv_sub200k_pilot/<stamp> results/arxiv_sub200k_lsa/<stamp>
 ```
 
 The measured sample statistics are in `docs/results/arxiv_token_stats.json`.
