@@ -139,3 +139,12 @@ def test_main_prints_every_section(tmp_path, monkeypatch, capsys):
     assert '- a against b: 2 identical, 1 differing (of 3)\n  - cluster 2: "c" vs "X"' in out
     assert "| Qwen3-0.6B | 4 | 3 | 60.0 | 30.0 (30.0-30.0) | 2.00 |" in out
     assert out.count("| Qwen3-0.6B | 8 |") == 1  # the batch-8 directory is in the speed table only, not the inflation table
+
+
+def test_logged_step_seconds_skips_the_leading_non_summary_row(tmp_path):
+    """Real traces start with a `summarize: False` step-0 row, so summary step j is the j-th row that summarized."""
+    rel = _write_logged_run(tmp_path)
+    _, record = tr.logged_run({"config": {"source": {"run_dir": rel, "method": "k-SLMmeans", "seed": 0}}}, tmp_path)
+    assert [row["summarize"] for row in record.trace] == [False, True, True]
+    assert tr.logged_step_seconds(record, 0) == (60.0, 3)
+    assert tr.logged_step_seconds(record, 1) == (40.0, 2)
