@@ -16,7 +16,7 @@ Evidence tags used below: **[exact]** a direct measurement of logged runs (the r
 8. The cost counters have no counting bug (calls and input tokens exact; output tokens within 0.1%), every size sends about 1.1M input tokens per seed, and output tokens are 24-42% lower under the clearer prompt; on an idle card the same 150 prompts take 94 / 166 / 314 s for the 0.6B (batch 8) / 1.7B (batch 4) / 4B (batch 1), and the #31 step-1 seconds of seed 0 were inflated by 1.76 / 1.72 / 1.15, with the whole-run factor not measured. [exact]
 9. Batch size changes the greedy summaries: at the logged batch size the regenerated summaries equal the logged ones (150 of 150 for all three sizes), but at batch 1 instead of the logged batch 25 of 150 (0.6B, logged batch 8) and 42 of 150 (1.7B, logged batch 4) differ. [exact]
 10. On BBC (500 articles, TF-IDF) every summary method has a higher mean ACC than k-means (0.788 against 0.839-0.873), but 28 of 30 paired intervals include 0; the dense control is driven by two seeds with a bad start. [association, 5 seeds]
-11. arXiv at full scale has not produced results yet: the plan and cost estimate are in place (about 2.9 GPU-hours for the 1.7B run when idle, up to 4.9), and the pilot, the baselines and LSA at 200k are running. See the placeholder in Section 5.
+11. arXiv: the three baselines ran at full scale (3.0M abstracts, seed 0; ACC 0.260-0.275), and the 1.7B pilot and LSA ran end to end on a 200k subsample (k-SLMmeans ACC 0.266, k-means 0.274, LSA 0.269, one seed each, so no difference is claimed). The pilot's rate, measured on a shared machine, puts the #49 full summary run at about 3.5 GPU-hours as a ceiling. Section 5.
 
 ## 1. A summary replaces a centroid (#33, #47)
 
@@ -156,17 +156,33 @@ Tokens do not depend on the card: output tokens fall 24% / 39% / 42% under the c
 
 ### arXiv (3,035,644 abstracts, k = 171) ([`arxiv_status.md`](arxiv_status.md))
 
-### TO FILL: arXiv runs
+Run on Nov 16, one seed (0) each, as one queue step (about 18:00 to 19:41). One seed means no intervals, and none of the gaps below is evidence of a difference between methods. The three jobs overlapped on one machine, so every time here is an upper bound, not an idle-machine figure. Details: `arxiv_status.md` Sections 2.4, 5.1 and 5b.1.
 
-Placeholder. The 200k pilot (1.7B), the full-scale baselines (seed 0) and LSA at 200k are running now. Fill here: scores and times of the three baselines at full scale, the pilot's measured seconds per call and call count against the upper bound, the LSA row at 200k, and whether summaries move the centroids at that scale.
+**Full-scale baselines** (3,035,644 abstracts, k = 171, CPU):
 
-**What arxiv_status.md already says (estimates, not results).**
-- The only scores so far are a 20k smoke run (one seed, a non-random prefix, 0.6B): ACC 0.2327 MiniBatchKMeans, 0.2553 sequential mini-batch, 0.2462 k-means, 0.2595 k-SLMmeans. It shows only that the pipeline works.
-- Baselines (k-means, mini-batch, sequential), full scale, CPU, about 1 hour for 3 seeds nominal (2.5 hours worst case), about 7 GB RAM with `copy_x: false`; seed 0 first.
-- LSA uses the 200k subsample: at full scale the sentence embeddings alone are 29 GB and segmentation is about 10 hours. About 45-80 minutes at 200k.
-- The current streaming schedule is out of reach (up to 259,920 calls, about 74 GPU-hours for the 0.6B).
-- Pilot: 200k, 1.7B, two steps, 20,000-row batches, at most 3,360 calls, about 1.3 GPU-hours idle (2.3 as logged).
-- Full summary run (#49): 1.7B, 150,000-row batches (21), two steps per batch, at most 7,182 calls, 2.9 GPU-hours idle, up to 4.9 as logged, one seed. This rests on the 1.7x estimate from `arxiv_status.md` (Section 4 measured it at step 1 only: 1.76, 1.72 and 1.15) and on CLINC150 rates; the pilot replaces it with a measured rate. Fewer batches and steps give the summaries fewer chances to move a centroid than in the paper's setup.
+| Baseline | ACC | NMI | ARI | runtime |
+| --- | ---: | ---: | ---: | ---: |
+| minibatchkmeans | 0.2600 | 0.5304 | 0.1636 | 134 s |
+| seqminibatchkmeans | 0.2752 | 0.5297 | 0.1758 | 54 s |
+| kmeans | 0.2645 | 0.5347 | 0.1643 | 747 s |
+
+Peak RAM was 9.5 GB at the kmeans row: 2.5 GB above the estimate and under the 10 GB stop rule. The memory guard did not fire. Seeds 1-2 were not run.
+
+**200k subsample** (k = 168, ten 20,000-row batches, two summary steps per batch; all five rows on the same rows):
+
+| Method | ACC | NMI | ARI | runtime |
+| --- | ---: | ---: | ---: | ---: |
+| minibatchkmeans | 0.2468 | 0.5301 | 0.1534 | 84 s |
+| seqminibatchkmeans | 0.2536 | 0.5264 | 0.1682 | 2 s |
+| kmeans | 0.2737 | 0.5421 | 0.1713 | 118 s |
+| k-SLMmeans (Qwen3-1.7B) | 0.2663 | 0.5355 | 0.1746 | 5,885 s |
+| k-NLPmeans (LSA) | 0.2694 | 0.5383 | 0.1809 | 3,358 s |
+
+- **What it shows:** the summary pipeline runs end to end at 200k. On one seed, k-SLMmeans is below k-means on ACC and NMI and above it on ARI, so this is not evidence for or against the summaries at this scale. Whether summaries move the centroids at scale is not measured here.
+- **Cost:** the run did not log the #30 cost fields (calls, tokens, summarizer seconds). All 168 clusters had a summary in all 10 batches, so 3,360 calls were scheduled. That gives 1.75 s per scheduled call, an upper bound, because the full baselines and then LSA ran alongside the pilot.
+- **#49 budget:** at that rate the full summary run (1.7B, 150,000-row batches, two steps, at most 7,182 calls) is about 3.5 GPU-hours as a ceiling for one seed. This replaces the earlier 2.9 h idle estimate. The earlier rule was to drop to one summary step above about 1.7 s per call. The measured 1.75 s sits on that line and is inflated, so an idle-card rerun of a few batches should decide it.
+- **Truncation:** one warning says a cluster's prompt went over the 4,096-token input limit and 1 of 10 texts was dropped. The warning is shown only once per summarizer instance, so the real count may be higher.
+- **LSA:** the GPU was busy with the pilot during its idle check, so its time (55 min of sentence preprocessing, 39 s of clustering) is inflated. Peak RAM was 8.1 GB, against a 3 GB estimate; this was not investigated.
 
 ## Reading across the requests (#50, preliminary)
 
@@ -175,7 +191,7 @@ On CLINC150 a summary changes which members a cluster keeps in proportion to how
 ## Pending / open items
 
 - Human hand check for #34: the student's job. The AI-rater results above are a stand-in, not a validation.
-- #49, the arXiv full run (Nov 30), and the arXiv placeholders above.
+- #49, the arXiv full summary run (Nov 30), with the cost fields logged and on an idle card; seeds 1-2 of the full-scale baselines.
 - #33 replay of the clearer-prompt 0.6B and 1.7B (the synthesis uses them at method level only).
 - The #35 full-seed re-timing (deferred; the whole-run inflation of the #31 seconds is unmeasured).
 - BBC member-selection ablation.
@@ -185,7 +201,7 @@ On CLINC150 a summary changes which members a cluster keeps in proportion to how
 ## Caveats that apply throughout
 
 - Five seeds: intervals have 4 degrees of freedom and are wide; no multiplicity correction (about 100 comparisons in #47 alone, about 120 strata in #50). A lone interval that excludes 0 is weak evidence.
-- One GPU (RTX 3060), one embedding encoder, one model family (Qwen3), one dataset for most claims (CLINC150); BBC has 5 clusters per seed; arXiv has no results.
+- One GPU (RTX 3060), one embedding encoder, one model family (Qwen3), one dataset for most claims (CLINC150); BBC has 5 clusters per seed; arXiv has one seed per method, so its scores are not comparisons.
 - Timing: the #31 seconds were inflated at step 1 of seed 0 by 1.76 / 1.72 / 1.15 (0.6B / 1.7B / 4B), the whole-run factor is not measured and later steps ran slower; the fixed-workload timings are 3 repeats of one workload on one card; batch sizes 8 / 4 / 1 mix size with batching and change the greedy summaries (25 of 150 and 42 of 150 differ for the 0.6B and 1.7B at batch 1); v2 seconds are not comparable with old ones and the v2 1.7B is not a clean timing; the guarded run overlapped niced CPU jobs for about its first hour; BBC CPU parts may be slightly inflated.
 - Replay exactness depends on re-embedding the summaries on the original device: a CPU encode differs by about 1e-6 per row and changes up to 9% of the old 4B's labels after a block.
 - Everything outside #47 and the prompt change is association; summary quality, geometry and members lost are mechanically related.
