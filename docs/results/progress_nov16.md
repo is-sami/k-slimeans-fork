@@ -13,9 +13,10 @@ Evidence tags used below: **[exact]** a direct measurement of logged runs (the r
 5. Under the clearer prompt the 4B scores 0.568 ACC against 0.511 (+0.056 [+0.039, +0.074], 5 of 5 seeds) and the 0.6B gains +0.022 [+0.010, +0.033], the 1.7B is unchanged within noise (-0.007 [-0.023, +0.010]), and the size order is no longer detectable on ACC (0.563 / 0.563 / 0.568; the 4B keeps a small NMI edge of +0.006). [multi-factor two-run intervention]
 6. Summary-quality scores do not rank final ACC across the seven model runs (coverage 0.49-0.69, ACC 0.511-0.570); within a run they track which members leave a cluster (rank correlation with nearest-summary share, the coverage measure, -0.78 / -0.72 / -0.83 for 0.6B / 1.7B / 4B), largely by construction. [association]
 7. Whether a cluster's purity rises or falls after the replacement is not predicted by the summary scores once starting purity and size are controlled; starting purity separates the sign (step 1, against plain Lloyd: clusters with purity <= 0.4 gain +0.04 to +0.06 for the three October models, clusters above 0.9 lose 0.04 to 0.09). [association]
-8. The cost counters have no counting bug (calls and input tokens exact; output tokens within 0.1%), every size sends about 1.1M input tokens per seed, and output tokens are 24-42% lower under the clearer prompt; seconds are inflated (about 1.7x, a single-check estimate) and not comparable across runs yet. [exact for tokens, estimate for the inflation]
-9. On BBC (500 articles, TF-IDF) every summary method has a higher mean ACC than k-means (0.788 against 0.839-0.873), but 28 of 30 paired intervals include 0; the dense control is driven by two seeds with a bad start. [association, 5 seeds]
-10. arXiv at full scale has not produced results yet: the plan and cost estimate are in place (about 2.9 GPU-hours for the 1.7B run when idle, up to 4.9), and the pilot, the baselines and LSA at 200k are running. See the placeholder in Section 5.
+8. The cost counters have no counting bug (calls and input tokens exact; output tokens within 0.1%), every size sends about 1.1M input tokens per seed, and output tokens are 24-42% lower under the clearer prompt; on an idle card the same 150 prompts take 94 / 166 / 314 s for the 0.6B (batch 8) / 1.7B (batch 4) / 4B (batch 1), and the #31 step-1 seconds of seed 0 were inflated by 1.76 / 1.72 / 1.15, with the whole-run factor not measured. [exact]
+9. Batch size changes the greedy summaries: at the logged batch size the regenerated summaries equal the logged ones (150 of 150 for all three sizes), but at batch 1 instead of the logged batch 25 of 150 (0.6B, logged batch 8) and 42 of 150 (1.7B, logged batch 4) differ. [exact]
+10. On BBC (500 articles, TF-IDF) every summary method has a higher mean ACC than k-means (0.788 against 0.839-0.873), but 28 of 30 paired intervals include 0; the dense control is driven by two seeds with a bad start. [association, 5 seeds]
+11. arXiv at full scale has not produced results yet: the plan and cost estimate are in place (about 2.9 GPU-hours for the 1.7B run when idle, up to 4.9), and the pilot, the baselines and LSA at 200k are running. See the placeholder in Section 5.
 
 ## 1. A summary replaces a centroid (#33, #47)
 
@@ -92,9 +93,9 @@ The 4B mentions the cluster in 34% of summaries under the old prompt and 0% unde
 
 **Pending.** The human hand check on the blank sheets (the student's job); its agreement numbers replace the stand-in.
 
-## 4. Cost verification (#35, parts 1-2; part 3 pending)
+## 4. Cost verification and timing (#35)
 
-**What was done.** Part 1: the logged counters were rebuilt from the logged partitions and summaries with the Qwen3 tokenizer, no GPU ([`cost_verification.md`](cost_verification.md)). Part 2: every run since logs a GPU idle check (`gpu.json`) and a monitor (`gpu_samples.csv`).
+**What was done.** Part 1: the logged counters were rebuilt from the logged partitions and summaries with the Qwen3 tokenizer, no GPU ([`cost_verification.md`](cost_verification.md)). Part 2: every run since logs a GPU idle check (`gpu.json`) and a monitor (`gpu_samples.csv`). Part 3: one fixed workload re-timed on an idle-checked card ([`cost_timing.md`](cost_timing.md)).
 
 **Results.** [exact] No counting bug. Calls per step and per run, input tokens, truncated clusters and dropped texts match exactly at batch sizes 8, 4 and 1; output tokens match within 0.1% (at most 15 tokens per seed, cause not isolated). `summarizer_seconds` is a wall-clock reading taken after the GPU work finishes; for the language models it is 99.1-99.7% of total seconds. Per seed, from the #31 and #46 runs ([`prompt_test.md`](prompt_test.md) Section 8.4):
 
@@ -105,15 +106,33 @@ The 4B mentions the cluster in 34% of summaries under the old prompt and 0% unde
 | 1.7B old / v2 | 702 / 701 | 1.10M / 1.14M | 18.3k / 11.2k | 1,239 / 737 |
 | 4B old / v2 | 714 / 698 | 1.12M / 1.13M | 15.6k / 9.1k | 1,855 / 1,094 |
 
-Tokens are the only clean cost statement: output tokens fall 24% / 39% / 42% under the clearer prompt (0.6B / 1.7B / 4B). Truncation touches about 1% of calls; `rq2_truncation_check.md` (#37) concludes the #15 numbers stand with a caveat and a re-run is optional (prepared, not run).
+Tokens do not depend on the card: output tokens fall 24% / 39% / 42% under the clearer prompt (0.6B / 1.7B / 4B). Truncation touches about 1% of calls; `rq2_truncation_check.md` (#37) concludes the #15 numbers stand with a caveat and a re-run is optional (prepared, not run).
 
-**What it does not show.** The seconds are not a cost comparison. The #31 seconds are inflated (about 1.7x, a single-check estimate) by another process on the card (from one BANKING77 check, 185 s against 105-115 s, not measured on CLINC150); batch sizes 8 / 4 / 1 mix model size with batching; the v2 seconds are not comparable with the old ones, and the v2 1.7B's later seeds ran about 1.6x slower with a foreign GPU process seen at the end. No time saving from the prompt is claimed.
+**What it does not show.** The logged seconds above are not a cost comparison: the #31 seconds were taken on a shared card, batch sizes 8 / 4 / 1 mix model size with batching, the v2 seconds are not comparable with the old ones, and the v2 1.7B's later seeds ran about 1.6x slower with a foreign GPU process seen at the end. No time saving from the prompt is claimed. The clean seconds are in the next subsection.
 
-### TO FILL: cost_timing.md
+### Fixed-workload timing (#35 part 3, [`cost_timing.md`](cost_timing.md))
 
-Placeholder. #35 part 3 (re-timing a fixed workload with batching held fixed, on an idle-checked card) is written up in `docs/results/cost_timing.md`, which is in progress on another branch. Fill here: the fixed-workload seconds per size, the measured inflation of the #31 timings, and whether the size ordering of cost survives equal batching. Already known: the token counts above and the counter verification.
+**What was done.** The 150 prompts of seed 0's first summary step (234,011 input tokens, identical for every size) were re-summarized on an idle-checked RTX 3060 (checked before each run, sampled every 5 s during it). Each setting had 1 warm-up pass and 3 timed repeats; repeats differ by at most 8% and gave identical summaries. Scope: 3 repeats, one workload, one card.
 
-**Pending.** Part 3 (above); full-seed re-timing (deferred); the optional pricing comparison (#10).
+| Model, batch | s per call | Output tok/s | Total s, median (range) | Reserved GB |
+| --- | ---: | ---: | --- | ---: |
+| 0.6B, batch 1 | 0.89 | 16.7 | 133 (130-135) | 1.85 |
+| 0.6B, batch 8 (#31) | 0.63 | 22.8 | 94 (94-95) | 6.11 |
+| 1.7B, batch 1 | 1.74 | 14.5 | 261 (242-262) | 4.24 |
+| 1.7B, batch 4 (#31) | 1.11 | 22.8 | 166 (160-167) | 6.30 |
+| 4B, batch 1 (#31) | 2.10 | 10.1 | 314 (309-318) | 9.12 |
+
+**Size and batch size.** [exact, this workload]
+- At batch 1 the 1.7B takes 1.96 times and the 4B 2.36 times the 0.6B's time on the same prompts; output tokens per second are 16.7, 14.5 and 10.1. Seconds per call also depend on summary length (2,225, 3,795 and 3,160 output tokens), so tokens per second is the fairer size comparison. The 4B fits the card only at batch 1.
+- Batching matters about as much as size here: the 1.7B goes from 261 s at batch 1 to 166 s at batch 4 (1.57 times faster), the 0.6B from 133 s to 94 s at batch 8 (1.41 times). The cost is memory (reserved 1.7B 4.2 to 6.3 GB, 0.6B 1.9 to 6.1 GB). At each model's own #31 batch size the per-call seconds are not in size order (0.63, 1.11, 2.10), so #31 per-call seconds mix the two effects.
+
+**Inflation of the #31 timings, step 1 of seed 0 only.** The #31 logged step-1 seconds against the fixed workload at the same batch size: 0.6B 165.9 against 94.5 s (1.76), 1.7B 286.8 against 166.3 s (1.72), 4B 360.8 against 314.4 s (1.15). This is one step of one seed per size, one logged measurement against three repeats; it replaces the single BANKING77 estimate of about 1.7x for step 1 (the 0.6B and 1.7B agree with it, the 4B does not; why is a guess). **The whole-run inflation factor is not measured.** Later steps of the same #31 runs were slower per output token than step 1 (the 4B about 1.3 times the idle rate at steps 2-5, the 0.6B up to 2.6 times at step 5), so the load varied within a run and step 1 is the least inflated step of the 0.6B and 4B runs. A rough projection (calls times idle seconds per call) gives about 2.1, 1.8 and 1.3 for the whole seed; it is not a measurement and is not used to correct the #31 seconds.
+
+**Determinism.** [exact] Greedy decoding, so a different output is a different computation. At each size's logged batch size the regenerated summaries equal the #31 ones in 150 of 150 clusters (different day and process), and repeats of one setting are identical. At batch 1 instead of the logged batch, 25 of 150 (0.6B against batch 8) and 42 of 150 (1.7B against batch 4) summaries differ; the output-token totals barely move (2,225 against 2,157; 3,795 against 3,786). A model at two batch sizes is therefore two slightly different summarizers, and the #31 size comparison at batch 8 / 4 / 1 carries a small batch effect on the summaries as well as on the seconds. This counts differing strings, not quality; whether the differing summaries cluster differently was not measured.
+
+**What it does not show.** Nothing here measures energy, price or summary quality; a different card, inference server or quantization would change the seconds and possibly the ratios between sizes. The v2 rows of the per-method cost table in `cost_timing.md` were idle-checked at start, but the v2 1.7B was not clean during its run.
+
+**Pending.** The full-seed re-time (one whole #31 seed per size on an idle card; deferred, so the whole-run inflation stays unmeasured); the effect of batch-induced summary differences on clustering; the optional pricing comparison (#10).
 
 ## 5. Large-scale (arXiv) and high-dimensional (BBC) datasets (#48, #18)
 
@@ -147,7 +166,7 @@ Placeholder. The 200k pilot (1.7B), the full-scale baselines (seed 0) and LSA at
 - LSA uses the 200k subsample: at full scale the sentence embeddings alone are 29 GB and segmentation is about 10 hours. About 45-80 minutes at 200k.
 - The current streaming schedule is out of reach (up to 259,920 calls, about 74 GPU-hours for the 0.6B).
 - Pilot: 200k, 1.7B, two steps, 20,000-row batches, at most 3,360 calls, about 1.3 GPU-hours idle (2.3 as logged).
-- Full summary run (#49): 1.7B, 150,000-row batches (21), two steps per batch, at most 7,182 calls, 2.9 GPU-hours idle, up to 4.9 as logged, one seed. This rests on the 1.7x estimate above and on CLINC150 rates; the pilot replaces it with a measured rate. Fewer batches and steps give the summaries fewer chances to move a centroid than in the paper's setup.
+- Full summary run (#49): 1.7B, 150,000-row batches (21), two steps per batch, at most 7,182 calls, 2.9 GPU-hours idle, up to 4.9 as logged, one seed. This rests on the 1.7x estimate from `arxiv_status.md` (Section 4 measured it at step 1 only: 1.76, 1.72 and 1.15) and on CLINC150 rates; the pilot replaces it with a measured rate. Fewer batches and steps give the summaries fewer chances to move a centroid than in the paper's setup.
 
 ## Reading across the requests (#50, preliminary)
 
@@ -158,7 +177,7 @@ On CLINC150 a summary changes which members a cluster keeps in proportion to how
 - Human hand check for #34: the student's job. The AI-rater results above are a stand-in, not a validation.
 - #49, the arXiv full run (Nov 30), and the arXiv placeholders above.
 - #33 replay of the clearer-prompt 0.6B and 1.7B (the synthesis uses them at method level only).
-- #35 part 3 (placeholder above) and the full-seed re-timing (deferred).
+- The #35 full-seed re-timing (deferred; the whole-run inflation of the #31 seconds is unmeasured).
 - BBC member-selection ablation.
 - #37 re-run on the #31 protocol (optional; about 3.4-5.8 GPU-hours, not run).
 - Seeds 5-9 and Bank77 under the clearer prompt (#36); Nov 17 review.
@@ -167,7 +186,7 @@ On CLINC150 a summary changes which members a cluster keeps in proportion to how
 
 - Five seeds: intervals have 4 degrees of freedom and are wide; no multiplicity correction (about 100 comparisons in #47 alone, about 120 strata in #50). A lone interval that excludes 0 is weak evidence.
 - One GPU (RTX 3060), one embedding encoder, one model family (Qwen3), one dataset for most claims (CLINC150); BBC has 5 clusters per seed; arXiv has no results.
-- Timing is contaminated: the #31 seconds are inflated (about 1.7x, a single-check estimate); batch sizes 8 / 4 / 1 mix size with batching; v2 seconds are not comparable with old ones and the v2 1.7B is not a clean timing; the guarded run overlapped niced CPU jobs for about its first hour; BBC CPU parts may be slightly inflated.
+- Timing: the #31 seconds were inflated at step 1 of seed 0 by 1.76 / 1.72 / 1.15 (0.6B / 1.7B / 4B), the whole-run factor is not measured and later steps ran slower; the fixed-workload timings are 3 repeats of one workload on one card; batch sizes 8 / 4 / 1 mix size with batching and change the greedy summaries (25 of 150 and 42 of 150 differ for the 0.6B and 1.7B at batch 1); v2 seconds are not comparable with old ones and the v2 1.7B is not a clean timing; the guarded run overlapped niced CPU jobs for about its first hour; BBC CPU parts may be slightly inflated.
 - Replay exactness depends on re-embedding the summaries on the original device: a CPU encode differs by about 1e-6 per row and changes up to 9% of the old 4B's labels after a block.
 - Everything outside #47 and the prompt change is association; summary quality, geometry and members lost are mechanically related.
 - #34 scores have no human validation yet; the unsupported and generic flags are loose, and the AI-rater stand-in (two Claude Sonnet 5.5 instances) is not a human rating.
