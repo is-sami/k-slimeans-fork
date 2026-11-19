@@ -103,6 +103,32 @@ Mean objectives at step 1, before / old assignments / re-assigned / after the bl
 - After 20 iterations the 4B is the only method clearly above the pre-replacement objective: +1.3% on average at step 1, against +0.1% (1.7B) and +0.26% (0.6B) and -0.25% for LSA. In the seed-0 figure its curve lies above the others' for most of every block (at step 4 the 0.6B and 1.7B end higher), between 0.0% and 0.6% above the pre-replacement objective at iteration 20 depending on the step.
 - The size of the jump does not rank the outcomes: 1.7B and 4B have similar jumps (0.95 and 0.98) and opposite outcomes (Section 6). LSA's blocks stop early in 8 of its 25 cases (10 end on a strict-convergence stop, 2 of them at exactly iteration 20); the other methods' blocks always run the full 20 iterations.
 
+### What the objective does and does not show (for the method section)
+
+Notation: `C` is the pre-replacement assignment, `x̄_k` the mean of cluster `k` under `C` and `n_k` its size, `M` the pre-replacement centers, `S` the summary embeddings, and `J(C, Z) = Σ_i ‖x_i − z_{c_i}‖²` the objective of centers `Z` with the assignment held fixed.
+
+**True for fixed assignments.** For any centers `Z`, `J(C, Z) = J(C, X̄) + Σ_k n_k ‖z_k − x̄_k‖²`, so the cluster means minimise `J` for fixed `C`. Replacing the centers `M` by `S` with the assignment kept therefore changes `J` by exactly `Σ_k n_k (‖s_k − x̄_k‖² − ‖m_k − x̄_k‖²)`, which is about `Σ_k n_k ‖s_k − x̄_k‖²` (the size-weighted squared movement of the centers) when `M` are the means. Empty clusters contribute nothing to either sum.
+
+**True after reassignment.** Moving each point to its nearest summary center cannot raise `J`, and no later Lloyd step can raise it. The second statement also holds for sklearn's empty-cluster relocation: a relocated point becomes the sole member of a center at distance zero and the donor cluster's mean is recomputed, so `J` cannot rise. In the replay's `replacement_diagnostic_iterations.csv` no iteration of any block or counterfactual raises the objective by more than 1e-6 (the largest increase is 5e-12), and relocation fires in 55 of its 5,220 rows. From the raised value the objective can only stay level or fall.
+
+**Not implied: where it ends.** The run that starts from the summary centers and the run that starts from `M` are two Lloyd runs from different starts. They can reach different local optima (the runs here do end at different objective values), and either can end with the lower `J`. A lower `J` does not imply a higher ACC or NMI against the gold labels. Nothing about the final objective, or about a score, follows from the identity.
+
+**Check on the logged replays** (`scripts/check_objective_identity.py`, `replacement_objective_identity.csv`; CPU, no model, no re-embedding). For the 25 step-1 replays (the four #31 runs and the v2 4B, seeds 0-4; `M` and `C` are not logged quantities but the replayed step-0 fit, trusted through the exact replay (the script asserts that its labels equal the logged step-0 labels; 120 of 120 fits are exact, section 2); `S` are the GPU-encoded summary embeddings of section 2) the two sides of the identity agree to float precision: maximum absolute residual 3.6e-12 in `J`, maximum relative residual 2.9e-16. The "old assignment" minus "before" objectives of `replacement_diagnostic_steps.csv` equal `J(C, S) − J(C, M)` to a relative 1.1e-11 at most. No pre-replacement cluster is empty at step 1, so the empty-cluster case is covered by the unit tests only (`tests/test_check_objective_identity.py`). The pre-replacement centers are the means only up to the block's tolerance: `Σ_k n_k ‖m_k − x̄_k‖²` is 0.27 to 2.2 (mean 0.90) against `J(C, M)` of 10,698 to 10,758, at most 2.1e-4 of it, so `J(C, S) − J(C, M)` is between 0.99975 and 0.99998 times `Σ_k n_k ‖s_k − x̄_k‖²` in every replay. To reproduce, pass one stamp per run (the script rejects a repeated run, method and seed; `clinc150_qwen3-0.6b` also has the incomplete stamp 20261027-174933, which is not used): `clinc150_lsa/20261027-174631`, `clinc150_qwen3-0.6b/20261027-190908`, `clinc150_qwen3-1.7b/20261027-202532`, `clinc150_qwen3-4b/20261027-221042` and `clinc150_v2_qwen3-4b/20261112-181256`, with both summary-embedding files of section 10.
+
+**Measured, step 1, CLINC150, one encoder, means over 5 seeds** (the table above; `J(C, M)` is 10,721 for every method):
+
+| model | `J(C, S) − J(C, M)` | raise after reassignment | end of block vs before | seeds with `J` end above no replacement (20 iterations / to convergence) |
+| --- | ---: | ---: | ---: | --- |
+| lsa | 8,675 | +72% | −0.25% | 0/5 / 0/5 |
+| qwen3-0.6b | 11,436 | +78% | +0.26% | 4/5 / 3/5 |
+| qwen3-1.7b | 12,631 | +95% | +0.10% | 4/5 / 3/5 |
+| qwen3-4b | 14,939 | +98% | +1.3% | 5/5 / 5/5 |
+| v2 qwen3-4b | 9,567 | +70% | +0.009% | 3/5 / 3/5 |
+
+- Every replacement raises `J` at fixed assignments (the first column, as the identity requires) and Lloyd removes most of the rise within one or two iterations (88% to 97% by iteration 1, all steps, above). After 20 iterations only LSA ends below the objective before the replacement. Against the run without replacement (10,712) LSA ends 0.17% below, the 0.6B and 1.7B 0.35% and 0.18% above, the old 4B 1.4% above, the v2 4B 0.09% above.
+- The 1.7B and the old 4B raise `J` by about the same (+95% and +98% after reassignment) and both end above the no-replacement run in `J` (+0.18% and +1.4%), about eight times apart. Against that run in ACC they end on opposite sides (+0.0106 and −0.0159, section 6). So neither the size of the rise nor the final `J` orders the outcomes, consistent with the argument above: nothing about a score follows from the objective.
+- Scope: step 1 only (later blocks start from replayed previous blocks and the objective argument is the same, but the table is step 1), five seeds, one dataset.
+
 ## 4. Centroid movement and movers
 
 Exact replay, GPU embeddings. Movement (summary versus pre-replacement center) depends only on the exact step-0 state at step 1 and on the embeddings.
@@ -317,7 +343,7 @@ Measured in the #31 runs: replacing the centroids with these summaries raises th
 
 Not concluded:
 
-- That the duplicates or the cluster-mentioning summaries *cause* the 4B's lower scores. These are associations between measures; #47 tests this with swapped start centers (the replay's `swap` hook).
+- That the duplicates or the cluster-mentioning summaries *cause* the 4B's lower scores. These are associations between measures; #47 tests this with swapped start centers (the replay's `swap` hook): at step 1 the swaps support an effect of the flagged summaries (`counterfactual_swaps.md`), and the guarded run does not recover the final scores detectably (`summary_guard.md`), so neither establishes why the final scores are low.
 - That the replay is exact on other hardware or software. It is exact for these four runs (120 of 120 fits) with GPU-encoded summaries, scikit-learn 1.9.1 and the library versions in Section 2. With CPU-encoded summaries the 4B's replay is not exact (8 of 30 fits), so check `verification.csv` before relying on a replay made on another device or with other library versions. The counterfactuals at steps 2 to 5 are replays by nature, since the logs hold no counterfactual.
 - That "below the counterfactual" means a worse basin. The convergence comparison removes the fixed-budget confound at step 1, but the counterfactual (plain Lloyd from the step-0 partition) is one reference among others.
 - Gold direction is measured against the pre-partition majority labels; it does not say whether the post-block partition is better, only the ACC/NMI/ARI columns do.
