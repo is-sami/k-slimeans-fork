@@ -13,8 +13,8 @@ and when M are the means (up to the block's convergence tolerance) this is about
 Empty clusters (n_k = 0) add nothing to either side.
 
 For every step-1 replay the logged runs allow (the four #31 CLINC150 runs and the v2 4B, seeds 0-4) this script
-replays the exact step-0 fit (the pre-replacement partition C and centers M, which the logs do not hold; checked
-against the logged step-0 labels) and reports, from C, M, the logged summaries' embeddings S and the data X:
+replays the exact step-0 fit (the pre-replacement partition C and centers M, which the logs do not hold: they are
+trusted through the exact replay, whose labels are asserted equal to the logged step-0 labels) and reports, from C, M, the logged summaries' embeddings S and the data X:
 
     a  J(C, S) - J(C, M)
     b  sum_k n_k (||s_k - x̄_k||^2 - ||m_k - x̄_k||^2)         (a and b agree to float precision)
@@ -24,6 +24,12 @@ against the logged step-0 labels) and reports, from C, M, the logged summaries' 
 and the logged "old assignment" minus "before" objectives of `replacement_diagnostic_steps.csv` (the same quantity as a).
 
 No language model, no encoding of summaries (the embeddings come from `scripts/embed_logged_summaries.py`), CPU only.
+
+A (run name, method, seed) may appear only once: `clinc150_qwen3-0.6b` has two stamps, the incomplete 20261027-174933
+(seeds 0-1) and 20261027-190908 (the #31 run), and only the second may be passed. The committed CSV was made from
+
+    clinc150_lsa/20261027-174631  clinc150_qwen3-0.6b/20261027-190908  clinc150_qwen3-1.7b/20261027-202532
+    clinc150_qwen3-4b/20261027-221042  clinc150_v2_qwen3-4b/20261112-181256
 
 Usage:
 
@@ -92,6 +98,14 @@ def objective_identity(X: np.ndarray, labels: np.ndarray, M: np.ndarray, S: np.n
     }
 
 
+def check_unique(rows: list[dict]) -> None:
+    """Raise if a (run, method, seed) occurs twice, e.g. two stamps of one run passed together."""
+    keys = [(r["run"], r["method"], r["seed"]) for r in rows]
+    duplicates = sorted({k for k in keys if keys.count(k) > 1})
+    if duplicates:
+        raise ValueError(f"duplicate (run, method, seed) inputs, e.g. {duplicates[0]}: pass one stamp per run")
+
+
 def check_run(run_dir: str, emb: SummaryEmbeddings, cache_dir: str, steps: pd.DataFrame | None) -> list[dict]:
     """One row per (method, seed) of `run_dir`: the identity at summary step 1, and the logged objectives."""
     log = load_run(run_dir)
@@ -134,6 +148,7 @@ def main() -> None:
     rows = []
     for run_dir in args.run_dirs:
         rows.extend(check_run(run_dir, emb, args.cache_dir, steps))
+        check_unique(rows)
     df = pd.DataFrame(rows)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(args.out, index=False, float_format="%.10g")

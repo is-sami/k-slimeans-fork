@@ -61,3 +61,37 @@ def test_float32_input_is_handled_in_float64():
     X, labels, M, S = _data(3)
     out = check.objective_identity(X.astype(np.float32), labels, M.astype(np.float32), S.astype(np.float32))
     assert out["rel_resid"] < 1e-12
+
+
+def test_duplicate_run_method_seed_is_rejected():
+    rows = [{"run": "a", "method": "m", "seed": 0}, {"run": "a", "method": "m", "seed": 1}]
+    check.check_unique(rows)
+    with pytest.raises(ValueError, match="duplicate"):
+        check.check_unique(rows + [{"run": "a", "method": "m", "seed": 0}])
+
+
+def test_step0_replay_that_differs_from_the_log_is_an_error(monkeypatch):
+    from types import SimpleNamespace
+
+    X, labels, M, S = _data(4)
+    record = SimpleNamespace(
+        summary_source_steps=[0],
+        trace=[{"step": 0, "last_max_iter": 5}],
+        summaries_evolution=[["s"] * 6],
+        assignments_evolution=[labels.copy()],
+    )
+    log = SimpleNamespace(config={"name": "run"}, records={("m", 0): record})
+    emb = SimpleNamespace(steps=lambda run, method, seed: [S])
+    monkeypatch.setattr(check, "load_run", lambda path: log)
+    monkeypatch.setattr(check, "load_run_dataset", lambda log, cache_dir=None: (None, X))
+
+    state = SimpleNamespace(labels=labels.copy(), centers=M)
+    monkeypatch.setattr(check, "fit_initial", lambda *a, **k: (state, 3))
+    rows = check.check_run("dir", emb, "cache", None)
+    assert rows[0]["abs_resid"] < 1e-10
+
+    bad = labels.copy()
+    bad[0] = (bad[0] + 1) % 6
+    monkeypatch.setattr(check, "fit_initial", lambda *a, **k: (SimpleNamespace(labels=bad, centers=M), 3))
+    with pytest.raises(RuntimeError, match="step-0 replay differs"):
+        check.check_run("dir", emb, "cache", None)
