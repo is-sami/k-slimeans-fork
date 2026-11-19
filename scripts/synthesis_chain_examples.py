@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Worked examples of readable summaries that are poor representatives (issue #50, section 12), chosen by a rule.
 
 Rule (no hand-picking). In one run at one seed and its first summary step, among the clusters whose summary passes every

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """The chain from summary quality to the final score, and the readable-but-poor summaries (issue #50, sections 11 and 12).
 
 Reads the joined per-cluster CSV that `scripts/synthesis.py` writes (CLINC150, step 1) and #33's committed step and outcome
