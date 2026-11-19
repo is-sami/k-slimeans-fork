@@ -99,3 +99,57 @@ def test_bank77_rows_come_from_the_per_seed_file():
     one = per_seed[per_seed["method"] == sr.method_name("1.7B", "old")].set_index("seed")["acc"]
     assert row["mean_diff"] == pytest.approx((four - one).mean())
     assert row["wins"] == int(((four - one) > 0).sum())
+
+
+def _committed() -> pd.DataFrame:
+    return pd.read_csv(RESULTS / "size_result_table.csv")
+
+
+def _cell(table: pd.DataFrame, dataset: str, prompt: str, larger: str, smaller: str, metric: str) -> pd.Series:
+    hit = table[
+        (table["dataset"] == dataset) & (table["prompt"] == prompt) & (table["larger"] == larger)
+        & (table["smaller"] == smaller) & (table["metric"] == metric)
+    ]  # fmt: skip
+    assert len(hit) == 1
+    return hit.iloc[0]
+
+
+def test_pinned_cells_match_the_source_files():
+    committed = _committed()
+    clinc = _cell(committed, "CLINC150", "old", "1.7B", "0.6B", "acc")
+    assert clinc["mean_diff"] == pytest.approx(0.0289, abs=5e-5)
+    assert clinc["wins"] == 5 and clinc["ties"] == 0
+    src = pd.read_csv(RESULTS / "prompt_test_paired.csv")
+    row = src[(src["reference"] == sr.method_name("0.6B", "old")) & (src["method"] == sr.method_name("1.7B", "old")) & (src["metric"] == "acc")].iloc[0]
+    assert clinc["mean_diff"] == pytest.approx(row["mean_diff"], abs=1e-6)
+    bbc = _cell(committed, "BBC dense", "old", "1.7B", "0.6B", "acc")
+    assert (bbc["wins"], bbc["ties"]) == (1, 2)  # `bbc_dense_paired.csv`: 0.6B tied with the others on two seeds
+    assert bbc["mean_diff"] == pytest.approx(-0.0568, abs=5e-5)
+
+
+def test_headline_counts_in_the_prose_match_the_csv():
+    committed = _committed()
+    assert len(committed) == 45
+    assert int(committed["below_min_detectable"].sum()) == 37
+    assert int(committed["ci_excludes_zero"].sum()) == 11
+
+
+def test_ci_excludes_zero_on_the_negative_side():
+    paired = _paired(sd=0.01, mean=-0.02)
+    paired["ci_low"], paired["ci_high"] = -0.03, -0.01
+    table = sr.size_table(paired, "Toy", "old")
+    assert table["ci_excludes_zero"].all()
+    assert table["below_min_detectable"].eq(False).all()  # |-0.02| > 0.0166
+
+
+def test_a_missing_pair_raises():
+    paired = _paired()
+    paired = paired[~((paired["method"] == sr.method_name("4B", "old")) & (paired["reference"] == sr.method_name("1.7B", "old")))]
+    with pytest.raises(ValueError, match="expected one row"):
+        sr.size_table(paired, "Toy", "old")
+
+
+def test_two_seeds_give_nan_not_an_error():
+    assert np.isnan(sr.min_detectable_exact(0.01, 2))
+    assert sr.min_detectable(0.01, 2) > 0
+    assert np.isfinite(sr.min_detectable_exact(0.01, 3))

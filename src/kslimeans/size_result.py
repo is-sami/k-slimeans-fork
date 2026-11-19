@@ -20,7 +20,7 @@ from scipy import optimize, stats
 SIZE_PAIRS = (("1.7B", "0.6B"), ("4B", "0.6B"), ("4B", "1.7B"))
 METRICS = ("acc", "nmi", "ari")
 COLUMNS = [
-    "dataset", "prompt", "larger", "smaller", "metric", "n", "mean_diff", "ci_low", "ci_high", "wins", "sd",
+    "dataset", "prompt", "larger", "smaller", "metric", "n", "mean_diff", "ci_low", "ci_high", "wins", "ties", "sd",
     "min_detectable", "min_detectable_exact", "below_min_detectable", "ci_excludes_zero",
 ]  # fmt: skip
 
@@ -36,10 +36,11 @@ def min_detectable(sd: float, n: int, alpha: float = 0.05, power: float = 0.8) -
 def min_detectable_exact(sd: float, n: int, alpha: float = 0.05, power: float = 0.8) -> float:
     """As `min_detectable`, but the noncentrality that gives the power comes from the noncentral t distribution.
 
-    Only the upper rejection region is counted; the other one adds under 1e-7 at the noncentralities involved, and
-    scipy's lower tail is unstable there.
+    Needs n >= 3 (NaN below that: with 1 df the search bracket does not reach the power). Only the upper rejection
+    region is counted; the other one adds about 1.4e-7 at the noncentrality that gives 80% power with 4 df, and
+    scipy's lower tail is unstable at large noncentralities.
     """
-    if n < 2 or not np.isfinite(sd):
+    if n < 3 or not np.isfinite(sd):
         return float("nan")
     df = n - 1
     crit = stats.t.ppf(1 - alpha / 2, df)
@@ -67,7 +68,7 @@ def size_table(paired: pd.DataFrame, dataset: str, prompt: str, alpha: float = 0
                 {
                     "dataset": dataset, "prompt": prompt, "larger": larger, "smaller": smaller, "metric": metric,
                     "n": int(r["n"]), "mean_diff": r["mean_diff"], "ci_low": r["ci_low"], "ci_high": r["ci_high"],
-                    "wins": int(r["wins"]), "sd": r["sd"], "min_detectable": mdd,
+                    "wins": int(r["wins"]), "ties": int(r["ties"]), "sd": r["sd"], "min_detectable": mdd,
                     "min_detectable_exact": min_detectable_exact(r["sd"], int(r["n"]), alpha, power),
                     "below_min_detectable": bool(abs(r["mean_diff"]) < mdd),
                     "ci_excludes_zero": bool(r["ci_low"] > 0 or r["ci_high"] < 0),
