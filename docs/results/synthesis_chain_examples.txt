@@ -1,0 +1,18 @@
+
+== worst: clinc150_v2_qwen3-4b seed 0 step 1 cluster 108: 'What are the steps to apply for an american express card?'
+members 169; purity before 0.746; nearest-summary share 0.05; intent coverage 0.00; margin -0.122; generic=1 unsupported=0
+lost share 0.970; member-purity change -0.538; minus the counterfactual -0.538
+gold intents of the members: [('book_flight', 126), ('lost_luggage', 20), ('distance', 11), ('book_hotel', 4)]
+kept: 5 [('book_flight', 3), ('new_card', 2)] | lost: 164 [('book_flight', 123), ('lost_luggage', 20), ('distance', 11), ('book_hotel', 4)]
+  59 went to cluster 84, whose members (source) are mostly [('flight_status', 147), ('distance', 7)]
+  40 went to cluster 131, whose members (source) are mostly [('restaurant_reservation', 46), ('book_hotel', 34)]
+  22 went to cluster 46, whose members (source) are mostly [('book_flight', 18), ('distance', 9)]
+
+== best: clinc150_v2_qwen3-4b seed 0 step 1 cluster 73: 'What health benefits and vaccinations do I have or need?'
+members 133; purity before 0.526; nearest-summary share 0.42; intent coverage 0.50; margin 0.229; generic=0 unsupported=0
+lost share 0.429; member-purity change +0.398; minus the counterfactual +0.398
+gold intents of the members: [('insurance', 70), ('vaccines', 51), ('insurance_change', 3), ('directions', 2)]
+kept: 76 [('insurance', 70), ('insurance_change', 3), ('spending_history', 1), ('min_payment', 1)] | lost: 57 [('vaccines', 51), ('directions', 2), ('where_are_you_from', 1), ('todo_list', 1)]
+  51 went to cluster 139, whose members (source) are mostly [('vaccines', 88), ('travel_suggestion', 7)]
+  2 went to cluster 96, whose members (source) are mostly [('nutrition_info', 35), ('ingredient_substitution', 27)]
+  2 went to cluster 62, whose members (source) are mostly [('directions', 71), ('travel_suggestion', 19)]
