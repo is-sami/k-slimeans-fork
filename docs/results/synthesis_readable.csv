@@ -1,0 +1,48 @@
+method_id,n_clusters,n_fluent,share_fluent,share_poor,share_poor_lo,share_poor_hi,share_low_coverage,share_low_coverage_lo,share_low_coverage_hi,share_generic,share_generic_lo,share_generic_hi,n_poor_fluent,kind,scope,outcome,adjustment,n_poor,n_pass,mean_poor,mean_pass,diff,lo,hi,n_seeds
+k-NLPmeans,750,745,0.993333,0.136913,0.119632,0.154193,0.134228,0.115594,0.152862,0.00268456,-0.00187978,0.00724891,102,share,step 1,,,,,,,,,,
+k-SLMmeans (Qwen3-0.6B),750,537,0.716,0.361998,0.332667,0.39133,0.342952,0.329695,0.356209,0.143341,0.11256,0.174123,194,share,step 1,,,,,,,,,,
+k-SLMmeans (Qwen3-1.7B),750,673,0.897333,0.394028,0.362428,0.425628,0.359779,0.338078,0.38148,0.166237,0.128239,0.204235,265,share,step 1,,,,,,,,,,
+k-SLMmeans (Qwen3-4B),750,499,0.665333,0.380026,0.326776,0.433276,0.33415,0.286717,0.381582,0.22542,0.167659,0.28318,190,share,step 1,,,,,,,,,,
+k-SLMmeans-v2 (Qwen3-0.6B),750,461,0.614667,0.357046,0.306725,0.407367,0.343942,0.298433,0.389452,0.0842377,0.0453772,0.123098,164,share,step 1,,,,,,,,,,
+k-SLMmeans-v2 (Qwen3-1.7B),750,732,0.976,0.442712,0.411301,0.474122,0.392142,0.353029,0.431255,0.206305,0.179724,0.232886,324,share,step 1,,,,,,,,,,
+k-SLMmeans-v2 (Qwen3-4B),750,428,0.570667,0.401831,0.360813,0.442848,0.374027,0.341542,0.406513,0.22623,0.192721,0.25974,172,share,step 1,,,,,,,,,,
+k-NLPmeans,,,,,,,,,,,,,,contrast,step 1,lost_share,none,102,643,0.257396,0.0560134,0.201383,0.12419,0.278576,5
+k-NLPmeans,,,,,,,,,,,,,,contrast,step 1,d_member_purity,none,102,643,0.0165711,-0.000201835,0.0167729,-0.0145844,0.0481302,5
+k-NLPmeans,,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_cf,none,102,643,0.0144357,-0.00082222,0.0152579,-0.0163575,0.0468734,5
+k-NLPmeans,,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_null,none,102,643,0.127008,0.0309643,0.0960432,0.0407103,0.151376,5
+k-SLMmeans (Qwen3-0.6B),,,,,,,,,,,,,,contrast,step 1,lost_share,none,194,343,0.527521,0.101618,0.425903,0.383263,0.468543,5
+k-SLMmeans (Qwen3-0.6B),,,,,,,,,,,,,,contrast,step 1,d_member_purity,none,194,343,-0.0214648,-0.0198764,-0.00158847,-0.0326138,0.0294369,5
+k-SLMmeans (Qwen3-0.6B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_cf,none,194,343,-0.0220931,-0.0199082,-0.00218488,-0.0362191,0.0318494,5
+k-SLMmeans (Qwen3-0.6B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_null,none,194,343,0.22879,0.0391241,0.189666,0.15315,0.226182,5
+k-SLMmeans (Qwen3-1.7B),,,,,,,,,,,,,,contrast,step 1,lost_share,none,265,408,0.426942,0.100437,0.326505,0.226327,0.426683,5
+k-SLMmeans (Qwen3-1.7B),,,,,,,,,,,,,,contrast,step 1,d_member_purity,none,265,408,0.0262596,-0.0269365,0.0531961,0.0102581,0.0961342,5
+k-SLMmeans (Qwen3-1.7B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_cf,none,265,408,0.0242104,-0.026816,0.0510264,0.00947536,0.0925774,5
+k-SLMmeans (Qwen3-1.7B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_null,none,265,408,0.213974,0.0304848,0.183489,0.117674,0.249303,5
+k-SLMmeans (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,lost_share,none,190,309,0.548256,0.125875,0.422381,0.380111,0.464651,5
+k-SLMmeans (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity,none,190,309,-0.0180271,-0.0514295,0.0334024,-0.0182887,0.0850936,5
+k-SLMmeans (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_cf,none,190,309,-0.0198782,-0.0510056,0.0311273,-0.0207629,0.0830176,5
+k-SLMmeans (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_null,none,190,309,0.280017,0.0327565,0.24726,0.198042,0.296478,5
+k-SLMmeans-v2 (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,lost_share,none,172,256,0.559196,0.106411,0.452785,0.402254,0.503316,5
+k-SLMmeans-v2 (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity,none,172,256,0.00420179,-0.00267884,0.00688063,-0.0327231,0.0464843,5
+k-SLMmeans-v2 (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_cf,none,172,256,0.00226761,-0.00320172,0.00546934,-0.0411966,0.0521352,5
+k-SLMmeans-v2 (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_null,none,172,256,0.222909,0.0501269,0.172782,0.13275,0.212813,5
+k-NLPmeans,,,,,,,,,,,,,,contrast,step 1,lost_share,bin_purity,102,643,0.257396,0.0560134,0.214401,0.124772,0.30403,5
+k-NLPmeans,,,,,,,,,,,,,,contrast,step 1,d_member_purity,bin_purity,102,643,0.0165711,-0.000201835,0.0189398,-0.0568596,0.0947393,5
+k-NLPmeans,,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_cf,bin_purity,102,643,0.0144357,-0.00082222,0.0113073,-0.0474042,0.0700187,5
+k-NLPmeans,,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_null,bin_purity,102,643,0.127008,0.0309643,0.110444,0.0214508,0.199437,5
+k-SLMmeans (Qwen3-0.6B),,,,,,,,,,,,,,contrast,step 1,lost_share,bin_purity,194,343,0.527521,0.101618,0.401107,0.352665,0.449548,5
+k-SLMmeans (Qwen3-0.6B),,,,,,,,,,,,,,contrast,step 1,d_member_purity,bin_purity,194,343,-0.0214648,-0.0198764,-0.0398148,-0.0982578,0.0186281,5
+k-SLMmeans (Qwen3-0.6B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_cf,bin_purity,194,343,-0.0220931,-0.0199082,-0.0406869,-0.0986114,0.0172376,5
+k-SLMmeans (Qwen3-0.6B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_null,bin_purity,194,343,0.22879,0.0391241,0.166676,0.127496,0.205856,5
+k-SLMmeans (Qwen3-1.7B),,,,,,,,,,,,,,contrast,step 1,lost_share,bin_purity,265,408,0.426942,0.100437,0.264189,0.17423,0.354149,5
+k-SLMmeans (Qwen3-1.7B),,,,,,,,,,,,,,contrast,step 1,d_member_purity,bin_purity,265,408,0.0262596,-0.0269365,0.0323579,-0.00770511,0.0724209,5
+k-SLMmeans (Qwen3-1.7B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_cf,bin_purity,265,408,0.0242104,-0.026816,0.0310742,-0.00862592,0.0707742,5
+k-SLMmeans (Qwen3-1.7B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_null,bin_purity,265,408,0.213974,0.0304848,0.164677,0.101947,0.227407,5
+k-SLMmeans (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,lost_share,bin_purity,190,309,0.548256,0.125875,0.40286,0.334664,0.471057,5
+k-SLMmeans (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity,bin_purity,190,309,-0.0180271,-0.0514295,0.0109848,-0.0448136,0.0667831,5
+k-SLMmeans (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_cf,bin_purity,190,309,-0.0198782,-0.0510056,0.00905709,-0.0488473,0.0669614,5
+k-SLMmeans (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_null,bin_purity,190,309,0.280017,0.0327565,0.251543,0.203462,0.299624,5
+k-SLMmeans-v2 (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,lost_share,bin_purity,172,256,0.559196,0.106411,0.398658,0.353752,0.443565,5
+k-SLMmeans-v2 (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity,bin_purity,172,256,0.00420179,-0.00267884,0.00598636,-0.035221,0.0471937,5
+k-SLMmeans-v2 (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_cf,bin_purity,172,256,0.00226761,-0.00320172,0.00492967,-0.0298874,0.0397467,5
+k-SLMmeans-v2 (Qwen3-4B),,,,,,,,,,,,,,contrast,step 1,d_member_purity_vs_null,bin_purity,172,256,0.222909,0.0501269,0.157768,0.117248,0.198287,5

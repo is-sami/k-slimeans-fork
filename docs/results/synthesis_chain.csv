@@ -1,0 +1,280 @@
+link,scope,method,stratum,x,y,controls,statistic,estimate,lo,hi,n_seeds,n_clusters
+1 quality to movement,step 1,k-NLPmeans,all,coverage_nearest,drift,none,"spearman, mean over seeds",-0.0131921,-0.109586,0.083202,5,750
+1 quality to movement,step 1,k-NLPmeans,all,coverage_nearest,own_nearest,none,"spearman, mean over seeds",,,,2,750
+1 quality to movement,step 1,k-NLPmeans,all,specificity_margin,drift,none,"spearman, mean over seeds",-0.338429,-0.413691,-0.263167,5,750
+1 quality to movement,step 1,k-NLPmeans,all,specificity_margin,own_nearest,none,"spearman, mean over seeds",,,,2,750
+1 quality to movement,step 1,k-NLPmeans,all,unsupported_lemma_share,drift,none,"spearman, mean over seeds",,,,1,749
+1 quality to movement,step 1,k-NLPmeans,all,unsupported_lemma_share,own_nearest,none,"spearman, mean over seeds",,,,0,749
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,coverage_nearest,drift,none,"spearman, mean over seeds",-0.688182,-0.707361,-0.669003,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,coverage_nearest,own_nearest,none,"spearman, mean over seeds",0.564528,0.508182,0.620875,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,specificity_margin,drift,none,"spearman, mean over seeds",-0.615511,-0.685784,-0.545237,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,specificity_margin,own_nearest,none,"spearman, mean over seeds",0.654096,0.617601,0.690591,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,unsupported_lemma_share,drift,none,"spearman, mean over seeds",0.388088,0.326044,0.450132,5,748
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,unsupported_lemma_share,own_nearest,none,"spearman, mean over seeds",-0.39266,-0.489677,-0.295643,5,748
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,coverage_nearest,drift,none,"spearman, mean over seeds",-0.355992,-0.387634,-0.324349,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,coverage_nearest,own_nearest,none,"spearman, mean over seeds",0.507954,0.475728,0.540179,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,specificity_margin,drift,none,"spearman, mean over seeds",-0.494811,-0.544735,-0.444886,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,specificity_margin,own_nearest,none,"spearman, mean over seeds",0.660198,0.608747,0.711649,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,unsupported_lemma_share,drift,none,"spearman, mean over seeds",0.342451,0.297787,0.387115,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,unsupported_lemma_share,own_nearest,none,"spearman, mean over seeds",-0.370846,-0.464078,-0.277615,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,coverage_nearest,drift,none,"spearman, mean over seeds",-0.738954,-0.769397,-0.708512,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,coverage_nearest,own_nearest,none,"spearman, mean over seeds",0.749699,0.722384,0.777014,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,specificity_margin,drift,none,"spearman, mean over seeds",-0.76744,-0.805089,-0.729791,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,specificity_margin,own_nearest,none,"spearman, mean over seeds",0.835547,0.818557,0.852537,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,unsupported_lemma_share,drift,none,"spearman, mean over seeds",0.718166,0.668983,0.76735,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,unsupported_lemma_share,own_nearest,none,"spearman, mean over seeds",-0.643806,-0.705865,-0.581747,5,750
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,coverage_nearest,drift,none,"spearman, mean over seeds",-0.559408,-0.61277,-0.506047,5,750
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,coverage_nearest,own_nearest,none,"spearman, mean over seeds",0.51446,0.484682,0.544237,5,750
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,specificity_margin,drift,none,"spearman, mean over seeds",-0.572028,-0.6045,-0.539556,5,750
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,specificity_margin,own_nearest,none,"spearman, mean over seeds",0.66012,0.625887,0.694353,5,750
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,unsupported_lemma_share,drift,none,"spearman, mean over seeds",0.427224,0.335365,0.519083,5,741
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,unsupported_lemma_share,own_nearest,none,"spearman, mean over seeds",-0.314427,-0.385598,-0.243256,5,741
+2 movement to assignment changes,step 1,k-NLPmeans,all,drift,lost_share,none,"spearman, mean over seeds",-0.140854,-0.255426,-0.0262811,5,750
+2 movement to assignment changes,step 1,k-NLPmeans,all,drift,gained_share,none,"spearman, mean over seeds",-0.127897,-0.217027,-0.0387677,5,750
+2 movement to assignment changes,step 1,k-NLPmeans,all,own_nearest,lost_share,none,"spearman, mean over seeds",,,,2,750
+2 movement to assignment changes,step 1,k-NLPmeans,all,own_nearest,gained_share,none,"spearman, mean over seeds",,,,2,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-0.6B),all,drift,lost_share,none,"spearman, mean over seeds",0.429704,0.399174,0.460235,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-0.6B),all,drift,gained_share,none,"spearman, mean over seeds",0.232495,0.171297,0.293692,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-0.6B),all,own_nearest,lost_share,none,"spearman, mean over seeds",-0.505571,-0.572856,-0.438285,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-0.6B),all,own_nearest,gained_share,none,"spearman, mean over seeds",-0.325585,-0.442918,-0.208253,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-1.7B),all,drift,lost_share,none,"spearman, mean over seeds",0.0763126,-0.0172669,0.169892,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-1.7B),all,drift,gained_share,none,"spearman, mean over seeds",0.00953639,-0.0578399,0.0769127,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-1.7B),all,own_nearest,lost_share,none,"spearman, mean over seeds",-0.454995,-0.514541,-0.395449,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-1.7B),all,own_nearest,gained_share,none,"spearman, mean over seeds",-0.301827,-0.418141,-0.185513,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-4B),all,drift,lost_share,none,"spearman, mean over seeds",0.608716,0.536393,0.681038,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-4B),all,drift,gained_share,none,"spearman, mean over seeds",0.276367,0.192448,0.360287,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-4B),all,own_nearest,lost_share,none,"spearman, mean over seeds",-0.701584,-0.781763,-0.621405,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-4B),all,own_nearest,gained_share,none,"spearman, mean over seeds",-0.381272,-0.444927,-0.317617,5,750
+2 movement to assignment changes,step 1,k-SLMmeans-v2 (Qwen3-4B),all,drift,lost_share,none,"spearman, mean over seeds",0.254897,0.196923,0.312871,5,750
+2 movement to assignment changes,step 1,k-SLMmeans-v2 (Qwen3-4B),all,drift,gained_share,none,"spearman, mean over seeds",0.246078,0.164555,0.3276,5,750
+2 movement to assignment changes,step 1,k-SLMmeans-v2 (Qwen3-4B),all,own_nearest,lost_share,none,"spearman, mean over seeds",-0.391722,-0.449398,-0.334045,5,750
+2 movement to assignment changes,step 1,k-SLMmeans-v2 (Qwen3-4B),all,own_nearest,gained_share,none,"spearman, mean over seeds",-0.390954,-0.411171,-0.370737,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,coverage_nearest,d_member_purity,none,"spearman, mean over seeds",-0.109159,-0.171319,-0.0469996,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,coverage_nearest,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.0955595,-0.180305,-0.0108143,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,specificity_margin,d_member_purity,none,"spearman, mean over seeds",0.00676337,-0.0569756,0.0705023,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,specificity_margin,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.0446523,-0.00459282,0.0938975,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,unsupported_lemma_share,d_member_purity,none,"spearman, mean over seeds",,,,1,749
+1b quality to purity change,step 1,k-NLPmeans,all,unsupported_lemma_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",,,,1,749
+1b quality to purity change,step 1,k-NLPmeans,all,drift,d_member_purity,none,"spearman, mean over seeds",-0.0826613,-0.163396,-0.00192687,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,drift,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.101046,-0.173765,-0.0283277,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,own_nearest,d_member_purity,none,"spearman, mean over seeds",,,,2,750
+1b quality to purity change,step 1,k-NLPmeans,all,own_nearest,d_member_purity_vs_cf,none,"spearman, mean over seeds",,,,2,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,coverage_nearest,d_member_purity,none,"spearman, mean over seeds",-0.123339,-0.159178,-0.087499,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,coverage_nearest,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.115476,-0.135849,-0.0951028,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,specificity_margin,d_member_purity,none,"spearman, mean over seeds",-0.0261243,-0.105595,0.0533469,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,specificity_margin,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.0143492,-0.0825184,0.05382,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,unsupported_lemma_share,d_member_purity,none,"spearman, mean over seeds",0.0276733,-0.048281,0.103628,5,748
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,unsupported_lemma_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.0247237,-0.0722044,0.121652,5,748
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,drift,d_member_purity,none,"spearman, mean over seeds",0.0781686,-0.0165168,0.172854,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,drift,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.0770365,-0.0203873,0.17446,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,own_nearest,d_member_purity,none,"spearman, mean over seeds",0.0423158,-0.0871132,0.171745,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,own_nearest,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.0371482,-0.0900359,0.164332,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,coverage_nearest,d_member_purity,none,"spearman, mean over seeds",-0.228801,-0.374918,-0.0826847,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,coverage_nearest,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.218846,-0.369704,-0.0679875,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,specificity_margin,d_member_purity,none,"spearman, mean over seeds",-0.09159,-0.208025,0.024845,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,specificity_margin,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.0725461,-0.20567,0.0605775,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,unsupported_lemma_share,d_member_purity,none,"spearman, mean over seeds",0.0791991,-0.0278304,0.186229,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,unsupported_lemma_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.0818936,-0.0315289,0.195316,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,drift,d_member_purity,none,"spearman, mean over seeds",0.0277088,-0.0502573,0.105675,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,drift,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.0230468,-0.0906234,0.136717,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,own_nearest,d_member_purity,none,"spearman, mean over seeds",-0.13198,-0.293324,0.0293638,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,own_nearest,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.115789,-0.298379,0.0668009,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,coverage_nearest,d_member_purity,none,"spearman, mean over seeds",-0.165848,-0.254161,-0.0775353,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,coverage_nearest,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.167216,-0.248705,-0.0857265,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,specificity_margin,d_member_purity,none,"spearman, mean over seeds",-0.0602592,-0.109077,-0.0114413,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,specificity_margin,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.0580585,-0.107641,-0.00847574,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,unsupported_lemma_share,d_member_purity,none,"spearman, mean over seeds",0.135886,0.0348097,0.236962,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,unsupported_lemma_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.132102,0.0321214,0.232083,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,drift,d_member_purity,none,"spearman, mean over seeds",0.115757,0.0162027,0.215311,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,drift,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.116419,0.0174821,0.215357,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,own_nearest,d_member_purity,none,"spearman, mean over seeds",-0.0944734,-0.198367,0.00942044,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,own_nearest,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.0968419,-0.189026,-0.00465782,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,coverage_nearest,d_member_purity,none,"spearman, mean over seeds",-0.165161,-0.257684,-0.0726383,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,coverage_nearest,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.156889,-0.271738,-0.0420397,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,specificity_margin,d_member_purity,none,"spearman, mean over seeds",-0.0356758,-0.134624,0.0632726,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,specificity_margin,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.0283457,-0.153235,0.0965441,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,unsupported_lemma_share,d_member_purity,none,"spearman, mean over seeds",0.130788,-0.0783533,0.33993,5,741
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,unsupported_lemma_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.119309,-0.099057,0.337675,5,741
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,drift,d_member_purity,none,"spearman, mean over seeds",0.0831425,-0.0492096,0.215495,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,drift,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.0778833,-0.0724161,0.228183,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,own_nearest,d_member_purity,none,"spearman, mean over seeds",-0.010981,-0.0921193,0.0701572,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,own_nearest,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.00414453,-0.102111,0.0938216,5,750
+1 quality to movement,step 1,k-NLPmeans,all,coverage_nearest,drift,"purity,log_n_members","spearman, mean over seeds",-0.153282,-0.264893,-0.0416718,5,750
+1 quality to movement,step 1,k-NLPmeans,all,coverage_nearest,own_nearest,"purity,log_n_members","spearman, mean over seeds",,,,2,750
+1 quality to movement,step 1,k-NLPmeans,all,specificity_margin,drift,"purity,log_n_members","spearman, mean over seeds",-0.393212,-0.465308,-0.321116,5,750
+1 quality to movement,step 1,k-NLPmeans,all,specificity_margin,own_nearest,"purity,log_n_members","spearman, mean over seeds",,,,2,750
+1 quality to movement,step 1,k-NLPmeans,all,unsupported_lemma_share,drift,"purity,log_n_members","spearman, mean over seeds",,,,1,749
+1 quality to movement,step 1,k-NLPmeans,all,unsupported_lemma_share,own_nearest,"purity,log_n_members","spearman, mean over seeds",,,,0,749
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,coverage_nearest,drift,"purity,log_n_members","spearman, mean over seeds",-0.712713,-0.737069,-0.688357,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,coverage_nearest,own_nearest,"purity,log_n_members","spearman, mean over seeds",0.522415,0.476108,0.568722,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,specificity_margin,drift,"purity,log_n_members","spearman, mean over seeds",-0.617622,-0.684302,-0.550941,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,specificity_margin,own_nearest,"purity,log_n_members","spearman, mean over seeds",0.627005,0.580289,0.673722,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,unsupported_lemma_share,drift,"purity,log_n_members","spearman, mean over seeds",0.358881,0.291481,0.42628,5,748
+1 quality to movement,step 1,k-SLMmeans (Qwen3-0.6B),all,unsupported_lemma_share,own_nearest,"purity,log_n_members","spearman, mean over seeds",-0.359524,-0.454706,-0.264342,5,748
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,coverage_nearest,drift,"purity,log_n_members","spearman, mean over seeds",-0.460597,-0.499605,-0.421589,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,coverage_nearest,own_nearest,"purity,log_n_members","spearman, mean over seeds",0.477204,0.45332,0.501088,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,specificity_margin,drift,"purity,log_n_members","spearman, mean over seeds",-0.542045,-0.600772,-0.483318,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,specificity_margin,own_nearest,"purity,log_n_members","spearman, mean over seeds",0.646507,0.609607,0.683407,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,unsupported_lemma_share,drift,"purity,log_n_members","spearman, mean over seeds",0.387293,0.334718,0.439868,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-1.7B),all,unsupported_lemma_share,own_nearest,"purity,log_n_members","spearman, mean over seeds",-0.333107,-0.428375,-0.23784,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,coverage_nearest,drift,"purity,log_n_members","spearman, mean over seeds",-0.768426,-0.79032,-0.746532,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,coverage_nearest,own_nearest,"purity,log_n_members","spearman, mean over seeds",0.726043,0.684452,0.767634,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,specificity_margin,drift,"purity,log_n_members","spearman, mean over seeds",-0.772713,-0.799197,-0.746228,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,specificity_margin,own_nearest,"purity,log_n_members","spearman, mean over seeds",0.81907,0.800265,0.837876,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,unsupported_lemma_share,drift,"purity,log_n_members","spearman, mean over seeds",0.708586,0.642789,0.774384,5,750
+1 quality to movement,step 1,k-SLMmeans (Qwen3-4B),all,unsupported_lemma_share,own_nearest,"purity,log_n_members","spearman, mean over seeds",-0.603052,-0.691479,-0.514624,5,750
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,coverage_nearest,drift,"purity,log_n_members","spearman, mean over seeds",-0.559936,-0.623521,-0.49635,5,750
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,coverage_nearest,own_nearest,"purity,log_n_members","spearman, mean over seeds",0.476239,0.433373,0.519105,5,750
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,specificity_margin,drift,"purity,log_n_members","spearman, mean over seeds",-0.566545,-0.600891,-0.532199,5,750
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,specificity_margin,own_nearest,"purity,log_n_members","spearman, mean over seeds",0.648707,0.599131,0.698283,5,750
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,unsupported_lemma_share,drift,"purity,log_n_members","spearman, mean over seeds",0.398941,0.312013,0.485869,5,741
+1 quality to movement,step 1,k-SLMmeans-v2 (Qwen3-4B),all,unsupported_lemma_share,own_nearest,"purity,log_n_members","spearman, mean over seeds",-0.273102,-0.364235,-0.181969,5,741
+2 movement to assignment changes,step 1,k-NLPmeans,all,drift,lost_share,"purity,log_n_members","spearman, mean over seeds",-0.016342,-0.147803,0.115119,5,750
+2 movement to assignment changes,step 1,k-NLPmeans,all,drift,gained_share,"purity,log_n_members","spearman, mean over seeds",-0.0559363,-0.169596,0.0577231,5,750
+2 movement to assignment changes,step 1,k-NLPmeans,all,own_nearest,lost_share,"purity,log_n_members","spearman, mean over seeds",,,,2,750
+2 movement to assignment changes,step 1,k-NLPmeans,all,own_nearest,gained_share,"purity,log_n_members","spearman, mean over seeds",,,,2,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-0.6B),all,drift,lost_share,"purity,log_n_members","spearman, mean over seeds",0.397472,0.353645,0.441299,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-0.6B),all,drift,gained_share,"purity,log_n_members","spearman, mean over seeds",0.198246,0.130959,0.265533,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-0.6B),all,own_nearest,lost_share,"purity,log_n_members","spearman, mean over seeds",-0.458874,-0.504818,-0.41293,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-0.6B),all,own_nearest,gained_share,"purity,log_n_members","spearman, mean over seeds",-0.309581,-0.427863,-0.191298,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-1.7B),all,drift,lost_share,"purity,log_n_members","spearman, mean over seeds",0.134936,0.0291109,0.240761,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-1.7B),all,drift,gained_share,"purity,log_n_members","spearman, mean over seeds",0.0393734,-0.047575,0.126322,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-1.7B),all,own_nearest,lost_share,"purity,log_n_members","spearman, mean over seeds",-0.401968,-0.469642,-0.334294,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-1.7B),all,own_nearest,gained_share,"purity,log_n_members","spearman, mean over seeds",-0.258826,-0.394465,-0.123187,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-4B),all,drift,lost_share,"purity,log_n_members","spearman, mean over seeds",0.594501,0.514452,0.67455,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-4B),all,drift,gained_share,"purity,log_n_members","spearman, mean over seeds",0.245298,0.147053,0.343544,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-4B),all,own_nearest,lost_share,"purity,log_n_members","spearman, mean over seeds",-0.6666,-0.742424,-0.590776,5,750
+2 movement to assignment changes,step 1,k-SLMmeans (Qwen3-4B),all,own_nearest,gained_share,"purity,log_n_members","spearman, mean over seeds",-0.362042,-0.447317,-0.276767,5,750
+2 movement to assignment changes,step 1,k-SLMmeans-v2 (Qwen3-4B),all,drift,lost_share,"purity,log_n_members","spearman, mean over seeds",0.192365,0.140849,0.243881,5,750
+2 movement to assignment changes,step 1,k-SLMmeans-v2 (Qwen3-4B),all,drift,gained_share,"purity,log_n_members","spearman, mean over seeds",0.199613,0.106949,0.292277,5,750
+2 movement to assignment changes,step 1,k-SLMmeans-v2 (Qwen3-4B),all,own_nearest,lost_share,"purity,log_n_members","spearman, mean over seeds",-0.326426,-0.387014,-0.265838,5,750
+2 movement to assignment changes,step 1,k-SLMmeans-v2 (Qwen3-4B),all,own_nearest,gained_share,"purity,log_n_members","spearman, mean over seeds",-0.345822,-0.373811,-0.317833,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,coverage_nearest,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.00373921,-0.108666,0.116145,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,coverage_nearest,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0102379,-0.130884,0.15136,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,specificity_margin,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0382528,-0.0265185,0.103024,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,specificity_margin,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0757733,0.00553369,0.146013,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,unsupported_lemma_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",,,,1,749
+1b quality to purity change,step 1,k-NLPmeans,all,unsupported_lemma_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",,,,1,749
+1b quality to purity change,step 1,k-NLPmeans,all,drift,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.0012479,-0.0832559,0.0807601,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,drift,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.0279312,-0.0987908,0.0429284,5,750
+1b quality to purity change,step 1,k-NLPmeans,all,own_nearest,d_member_purity,"purity,log_n_members","spearman, mean over seeds",,,,2,750
+1b quality to purity change,step 1,k-NLPmeans,all,own_nearest,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",,,,2,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,coverage_nearest,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0774465,-0.00544062,0.160334,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,coverage_nearest,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0847583,0.0103211,0.159195,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,specificity_margin,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.123266,0.00656284,0.23997,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,specificity_margin,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.13501,0.0266888,0.243331,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,unsupported_lemma_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.0609251,-0.144943,0.0230926,5,748
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,unsupported_lemma_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.0629525,-0.164482,0.0385771,5,748
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,drift,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0174597,-0.0910293,0.125949,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,drift,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.016982,-0.0952111,0.129175,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,own_nearest,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.152302,0.0372502,0.267355,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,own_nearest,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.144767,0.027821,0.261714,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,coverage_nearest,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.028717,-0.180419,0.122985,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,coverage_nearest,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.019342,-0.175572,0.136888,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,specificity_margin,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0319588,-0.0791891,0.143107,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,specificity_margin,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.051537,-0.0771407,0.180215,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,unsupported_lemma_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.0190172,-0.128599,0.0905642,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,unsupported_lemma_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.0136694,-0.1288,0.101461,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,drift,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0662067,-0.0190486,0.151462,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,drift,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0607285,-0.0556807,0.177138,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,own_nearest,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.0460351,-0.202643,0.110573,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,own_nearest,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.0292245,-0.210097,0.151648,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,coverage_nearest,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.0195577,-0.123657,0.084542,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,coverage_nearest,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.024899,-0.112994,0.0631957,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,specificity_margin,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0549384,-0.00766965,0.117546,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,specificity_margin,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0549559,-0.00156424,0.111476,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,unsupported_lemma_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0342912,-0.0715365,0.140119,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,unsupported_lemma_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0324741,-0.0633526,0.128301,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,drift,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.075904,-0.0267904,0.178598,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,drift,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0772674,-0.0232059,0.177741,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,own_nearest,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.00589242,-0.113755,0.101971,5,750
+1b quality to purity change,step 1,k-SLMmeans (Qwen3-4B),all,own_nearest,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.00982749,-0.102142,0.0824872,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,coverage_nearest,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0136067,-0.123778,0.150992,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,coverage_nearest,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0145431,-0.149438,0.178524,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,specificity_margin,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0963372,-0.0410177,0.233692,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,specificity_margin,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0994372,-0.0587165,0.257591,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,unsupported_lemma_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0620766,-0.136175,0.260328,5,741
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,unsupported_lemma_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0536371,-0.152145,0.259419,5,741
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,drift,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0173302,-0.137844,0.172504,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,drift,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0158977,-0.154858,0.186653,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,own_nearest,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.0725612,-0.0231217,0.168244,5,750
+1b quality to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,own_nearest,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.0753936,-0.0311832,0.18197,5,750
+3 assignment changes to purity change,step 1,k-NLPmeans,all,lost_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",0.029456,-0.0775905,0.136503,5,750
+3 assignment changes to purity change,step 1,k-NLPmeans,all,lost_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",0.00285633,-0.0991182,0.104831,5,750
+3 assignment changes to purity change,step 1,k-NLPmeans,all,gained_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.0876335,-0.151477,-0.0237899,5,750
+3 assignment changes to purity change,step 1,k-NLPmeans,all,gained_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.0968314,-0.194073,0.000409796,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,lost_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.11641,-0.196913,-0.0359075,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,lost_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.118245,-0.200004,-0.0364866,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,gained_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.269541,-0.331124,-0.207959,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,gained_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.270404,-0.328785,-0.212022,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,lost_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.0117217,-0.106044,0.0826002,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,lost_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.0251408,-0.128625,0.0783436,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,gained_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.164796,-0.243522,-0.0860697,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,gained_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.17638,-0.2481,-0.10466,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),all,lost_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.0546075,-0.15513,0.0459148,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),all,lost_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.0560611,-0.154134,0.0420118,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),all,gained_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.264528,-0.310212,-0.218844,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),all,gained_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.257745,-0.302402,-0.213088,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,lost_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.0513814,-0.145155,0.0423923,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,lost_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.0531447,-0.150891,0.0446013,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,gained_share,d_member_purity,"purity,log_n_members","spearman, mean over seeds",-0.18534,-0.216031,-0.15465,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,gained_share,d_member_purity_vs_cf,"purity,log_n_members","spearman, mean over seeds",-0.19174,-0.239602,-0.143877,5,750
+3 assignment changes to purity change,step 1,k-NLPmeans,all,lost_share,d_member_purity,none,"spearman, mean over seeds",0.148273,0.0675593,0.228986,5,750
+3 assignment changes to purity change,step 1,k-NLPmeans,all,lost_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.116519,0.0438353,0.189203,5,750
+3 assignment changes to purity change,step 1,k-NLPmeans,all,gained_share,d_member_purity,none,"spearman, mean over seeds",-0.00615226,-0.0469192,0.0346147,5,750
+3 assignment changes to purity change,step 1,k-NLPmeans,all,gained_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.0201187,-0.0921683,0.0519309,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,lost_share,d_member_purity,none,"spearman, mean over seeds",0.0662703,0.0350077,0.097533,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,lost_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.063419,0.0442997,0.0825383,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,gained_share,d_member_purity,none,"spearman, mean over seeds",-0.178266,-0.246284,-0.110247,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),all,gained_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.179819,-0.249415,-0.110223,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,lost_share,d_member_purity,none,"spearman, mean over seeds",0.189685,0.0902822,0.289087,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,lost_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.176116,0.061609,0.290623,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,gained_share,d_member_purity,none,"spearman, mean over seeds",-0.0498696,-0.115185,0.0154453,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),all,gained_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.0623478,-0.143539,0.0188429,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),all,lost_share,d_member_purity,none,"spearman, mean over seeds",0.0772086,-0.0112911,0.165708,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),all,lost_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.073202,-0.0137044,0.160108,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),all,gained_share,d_member_purity,none,"spearman, mean over seeds",-0.21101,-0.251594,-0.170427,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),all,gained_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.206736,-0.245356,-0.168115,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,lost_share,d_member_purity,none,"spearman, mean over seeds",0.113557,0.0400466,0.187067,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,lost_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",0.104135,0.0265423,0.181728,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,gained_share,d_member_purity,none,"spearman, mean over seeds",-0.0701586,-0.117782,-0.0225346,5,750
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),all,gained_share,d_member_purity_vs_cf,none,"spearman, mean over seeds",-0.0810356,-0.150797,-0.0112743,5,750
+3 assignment changes to purity change,step 1,k-NLPmeans,<=.4,lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.222677,0.0663495,0.379005,5,187
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),<=.4,lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.268055,0.1863,0.34981,5,187
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),<=.4,lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.344921,0.107269,0.582572,5,187
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),<=.4,lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.205281,0.150698,0.259865,5,187
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),<=.4,lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.269937,-0.0441455,0.58402,5,187
+3 assignment changes to purity change,step 1,k-NLPmeans,"(.4,.6]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.145521,0.0279166,0.263125,5,192
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),"(.4,.6]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.0232789,-0.0759807,0.0294228,5,192
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),"(.4,.6]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.180241,-0.180839,0.541321,5,192
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),"(.4,.6]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.026107,-0.188977,0.241191,5,192
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),"(.4,.6]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.106186,-0.0510605,0.263433,5,192
+3 assignment changes to purity change,step 1,k-NLPmeans,>.9,lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.548481,-0.883595,-0.213367,5,169
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),>.9,lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.582859,-0.747896,-0.417822,5,169
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),>.9,lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.614095,-0.795517,-0.432672,5,169
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),>.9,lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.51717,-0.667554,-0.366787,5,169
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),>.9,lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.463323,-0.621716,-0.30493,5,169
+3 assignment changes to purity change,step 1,k-NLPmeans,"(.6,.8]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.069892,-0.0827463,0.22253,5,133
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),"(.6,.8]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.171154,-0.324454,-0.017855,5,133
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),"(.6,.8]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.0816696,-0.150459,0.313798,5,133
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),"(.6,.8]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",0.0815402,-0.0284745,0.191555,5,133
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),"(.6,.8]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.0599585,-0.405538,0.285621,5,133
+3 assignment changes to purity change,step 1,k-NLPmeans,"(.8,.9]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.0914778,-0.610739,0.427784,5,69
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-0.6B),"(.8,.9]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.337543,-0.650905,-0.0241811,5,69
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-1.7B),"(.8,.9]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.356604,-0.820484,0.107275,5,69
+3 assignment changes to purity change,step 1,k-SLMmeans (Qwen3-4B),"(.8,.9]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.142485,-0.419146,0.134176,5,69
+3 assignment changes to purity change,step 1,k-SLMmeans-v2 (Qwen3-4B),"(.8,.9]",lost_share,d_member_purity_vs_cf,log_n_members,"spearman, mean over seeds",-0.369482,-0.662994,-0.0759689,5,69
+4 step-1 partition to final score,step 1 to final,all five runs,pooled,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.596154,,,5,25
+4 step-1 partition to final score,step 1 to final,all five runs,pooled without clinc150_lsa,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.639098,,,5,20
+4 step-1 partition to final score,step 1 to final,all five runs,within method,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",-0.110769,,,5,25
+4 step-1 partition to final score,step 1 to final,all five runs,within seed,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.747851,0.0906892,0.95129,5,5
+4 step-1 partition to final score,step 1 to final,clinc150_lsa,method mean,d_step_acc,d_final_acc,none,mean over seeds,0.00505778,,,5,5
+4 step-1 partition to final score,step 1 to final,clinc150_qwen3-0.6b,method mean,d_step_acc,d_final_acc,none,mean over seeds,0.00156444,,,5,5
+4 step-1 partition to final score,step 1 to final,clinc150_qwen3-1.7b,method mean,d_step_acc,d_final_acc,none,mean over seeds,0.0105956,,,5,5
+4 step-1 partition to final score,step 1 to final,clinc150_qwen3-4b,method mean,d_step_acc,d_final_acc,none,mean over seeds,-0.0158844,,,5,5
+4 step-1 partition to final score,step 1 to final,clinc150_v2_qwen3-4b,method mean,d_step_acc,d_final_acc,none,mean over seeds,0.00237333,,,5,5
+4 step-1 partition to final score,step 1 to final,clinc150_lsa,method mean,d_final_acc,d_final_acc,none,mean over seeds,0.00891536,,,5,5
+4 step-1 partition to final score,step 1 to final,clinc150_qwen3-0.6b,method mean,d_final_acc,d_final_acc,none,mean over seeds,-0.0104352,,,5,5
+4 step-1 partition to final score,step 1 to final,clinc150_qwen3-1.7b,method mean,d_final_acc,d_final_acc,none,mean over seeds,0.0184178,,,5,5
+4 step-1 partition to final score,step 1 to final,clinc150_qwen3-4b,method mean,d_final_acc,d_final_acc,none,mean over seeds,-0.04024,,,5,5
+4 step-1 partition to final score,step 1 to final,clinc150_v2_qwen3-4b,method mean,d_final_acc,d_final_acc,none,mean over seeds,0.01616,,,5,5
