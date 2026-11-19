@@ -16,8 +16,10 @@ key (`summary_audit_key_<dataset>.csv`, made by `make_audit_sheet.py --write-key
    reproduce the key's flag on every row, or the script stops.
 
 The report names the raters, the n per dataset and the fixed sample of 40 summaries per dataset. After filling
-`category` (paraphrase, generalisation, inflection_tokenisation, unshown_members, unsupported), run again with
-`--categories` and the filled CSV(s) to add the counts per category.
+`category` (paraphrase, generalisation, inflection_tokenisation, unshown_members, unsupported; `unshown_members`
+only makes sense in the reverse CSV), COPY the CSVs out of `--out-dir` (for example to `results/human_eval_filled/`),
+fill the copies, and run again with `--categories` and the copies to add the counts per category, separately for
+each file. The script rewrites its own outputs on every run, so it refuses a `--categories` path that is one of them.
 
     python scripts/human_eval_report.py --raters is-sami naween321 --sheets-dir docs/results \\
         --key-dir results/audit_keys --runs-dir results --cache-dir cache \\
@@ -46,6 +48,7 @@ from kslimeans.human_eval import (
     pairwise_agreement,
     rater_disagreements,
     reverse_table,
+    validate_ratings,
     vs_flags,
 )
 from kslimeans.summary_audit import HAND_LABELS, agreement_markdown, method_rates
@@ -93,6 +96,38 @@ def load_members(key: pd.DataFrame, runs_dir: Path, cache_dir: Path) -> dict[str
         (part,) = [p for p in step_partitions(record) if p.step == int(r["step"])]
         out[r["row_id"]] = [texts[i] for i in np.flatnonzero(np.asarray(part.labels) == int(r["cluster"]))]
     return out
+
+
+def load_categories(paths: list[Path], datasets, out_dir: Path) -> dict[str, pd.DataFrame]:
+    """Read and validate the filled paraphrase CSVs before anything is written.
+
+    Each needs a `dataset` column holding only processed datasets and valid `category` values, and must not be a
+    file this script writes into `out_dir` (it would be overwritten with an empty `category`).
+    """
+    outputs = {
+        (out_dir / f"paraphrase_{kind}_{d}.csv").resolve() for kind in ("flagged", "reverse") for d in datasets
+    }
+    loaded: dict[str, pd.DataFrame] = {}
+    for path in paths:
+        if Path(path).resolve() in outputs:
+            raise SystemExit(
+                f"{path} is a file this run writes; copy the filled CSV elsewhere (for example "
+                "results/human_eval_filled/) and pass the copy to --categories"
+            )
+        table = pd.read_csv(path)
+        if "dataset" not in table or "category" not in table:
+            raise SystemExit(f"{path}: needs the columns `dataset` and `category`")
+        unknown = sorted(set(table["dataset"].dropna()) - set(datasets))
+        if unknown:
+            raise SystemExit(f"{path}: rows of datasets {unknown} that are not being processed ({list(datasets)})")
+        try:
+            category_counts(table)
+        except ValueError as e:
+            raise SystemExit(f"{path}: {e}")
+        if Path(path).name in loaded:
+            raise SystemExit(f"two --categories files are named {Path(path).name}; rename one")
+        loaded[Path(path).name] = table
+    return loaded
 
 
 def dataset_section(
@@ -169,25 +204,28 @@ def report(
     sheet_pattern: str = SHEET_PATTERN,
     kind: str = "Human ratings",
     category_files: list[Path] = (),
+    blank_dir: Path | None = None,
 ) -> str:
     from kslimeans.summary_quality import load_nlp
 
+    categories = load_categories(list(category_files), datasets, out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     nlp = load_nlp()
-    categories = {Path(p).name: pd.read_csv(p) for p in category_files}
     keys, sizes = {}, {}
     body: list[str] = []
     for dataset in datasets:
         key = pd.read_csv(key_dir / f"summary_audit_key_{dataset}.csv")
         sheets = {r: pd.read_csv(sheets_dir / sheet_pattern.format(rater=r, dataset=dataset)) for r in raters}
-        check_sheets(sheets, key)
+        blank = pd.read_csv(blank_dir / f"summary_audit_sheet_{dataset}.csv") if blank_dir else None
+        check_sheets(sheets, key, blank)
+        validate_ratings(sheets)
         analysis = analyse_rows(next(iter(sheets.values())), key, load_members(key, runs_dir, cache_dir), nlp)
         check_flags(analysis)
         keys[dataset], sizes[dataset] = key, len(key)
         body += dataset_section(dataset, sheets, key, analysis, categories, out_dir)
     ns = ", ".join(f"{d} {n}" for d, n in sizes.items())
     head = [f"# {kind} of the summary hand check (issue #34)", "",
-            f"**{kind} by {', '.join(f'`{r}`' for r in raters)}.** n per dataset: {ns}; the sample is fixed at "
+            f"**{kind} of the summary hand check by {', '.join(f'`{r}`' for r in raters)}.** n per dataset: {ns}; the sample is fixed at "
             f"{SAMPLE_SIZE} summaries per dataset (10 gold intents x 4 methods), rated blind to the method. "
             "Generated by `scripts/human_eval_report.py`. Properties are the hand labels of "
             "`docs/summary_audit_rubric.md` (low coverage: fewer than half of the shown members fit; generic; "
@@ -208,7 +246,9 @@ def main() -> None:
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--datasets", nargs="+", default=list(DATASETS))
     parser.add_argument("--sheet-pattern", default=SHEET_PATTERN, help="file name of a rater's sheet, with {rater} and {dataset}")
-    parser.add_argument("--kind", default="Human ratings", help="what the ratings are, for the report header")
+    parser.add_argument("--kind", default="Human ratings", help="what the ratings are, for the report header (\"AI ratings\")")
+    parser.add_argument("--blank-dir", default=None, help="directory of the blank summary_audit_sheet_<dataset>.csv "
+                        "the raters' fixed columns must equal (default: --sheets-dir)")
     parser.add_argument("--categories", nargs="*", default=[], metavar="CSV", help="filled paraphrase_*.csv files")
     args = parser.parse_args()
     if len(args.raters) < 2:
@@ -217,6 +257,7 @@ def main() -> None:
     report(
         args.raters, Path(args.sheets_dir), Path(args.key_dir), Path(args.runs_dir), Path(args.cache_dir),
         Path(args.out_dir), args.datasets, args.sheet_pattern, args.kind, [Path(p) for p in args.categories],
+        Path(args.blank_dir or args.sheets_dir),
     )  # fmt: skip
     print(f"wrote {Path(args.out_dir) / 'human_eval_report.md'}")
 
