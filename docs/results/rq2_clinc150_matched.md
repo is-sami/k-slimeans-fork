@@ -94,6 +94,8 @@ Interpolation: the two fixed-n points bracketing the adaptive config's mean call
 
 For reference, on the selection seeds 0-2 (in-sample, optimistically biased): ΔACC vs fixed-n5 -0.012 (sd 0.018; -0.032..+0.002) at 0.34 of its calls (paired seeds 0-2).
 
+s/seed: Qwen3-0.6B at batch 8, card not idle-checked (the runs of 2026-10-15 and 16 predate #35).
+
 | Variant | seeds | calls | clusters summarized | % of fixed-n5 | ACC | NMI | ARI | s/seed |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | fixed-n5 | 3-9 | 702 ± 4 | 750 | 100.0% | 0.529 ± 0.007 | 0.740 ± 0.004 | 0.429 ± 0.007 | 537.4 |
