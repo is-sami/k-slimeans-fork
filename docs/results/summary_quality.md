@@ -300,6 +300,34 @@ there is no hand-check agreement number yet. The human check remains the planned
 - After the human rating, `python scripts/audit_agreement.py SHEET results/audit_keys/summary_audit_key_<dataset>.csv` prints, per property (low coverage, generic, unsupported, not fluent), the 2 x 2 table, raw agreement and
   Cohen's kappa. One rater; with 40 summaries per dataset the numbers will be rough.
 
+### Scoring the human ratings
+
+The two raters (`is-sami`, `naween321`) save their filled copies of the blank sheets as `docs/results/summary_audit_human_<login>_{clinc150_intent,bank77}.csv`. Once both sets are in, one command gives every number of the final-feedback request (no results yet). Keys stay out of the repo (`results/` is gitignored). First regenerate the keys and prove the regenerated sheets are the committed ones, so the keys belong to the sheets that were rated:
+
+```bash
+export HF_HUB_OFFLINE=1
+R=results   # the logged runs (run from the repository root)
+python scripts/make_audit_sheet.py $R/clinc150_lsa/20261027-174631 $R/clinc150_qwen3-0.6b/20261027-190908 \
+    $R/clinc150_qwen3-1.7b/20261027-202532 $R/clinc150_qwen3-4b/20261027-221042 $R/prelim_bank77_*/* \
+    --scores results/summary_quality/summary_quality_per_cluster.csv \
+    --cache-dir cache --out-dir results/audit_regen --write-key results/audit_keys
+for d in clinc150_intent bank77; do cmp results/audit_regen/summary_audit_sheet_$d.csv docs/results/summary_audit_sheet_$d.csv && echo "$d identical"; done
+python scripts/human_eval_report.py --raters is-sami naween321 --sheets-dir docs/results \
+    --key-dir results/audit_keys --runs-dir $R --cache-dir cache --out-dir results/human_eval
+```
+
+`--scores` is the per-cluster CSV that the first command of section 7 writes. Keys built from the 11 Nov and the 16 Nov versions of that file are identical (every column of all 80 audit rows, the automatic flags and lemma shares included), and the sheets do not depend on the v2 rows. If `cmp` prints a difference, stop: the keys would not match the rated sheets. The report (`results/human_eval/human_eval_report.md`, with CSVs beside it) has, per dataset: the agreement between the raters per property (2 x 2, raw agreement, kappa; for `members_fit` also the Spearman correlation and mean absolute difference of the counts) and the disagreeing rows, listed and not resolved; each rater and the consensus (rows where all raters agree on that property) against the automatic flags; per-method rates for each rater; and the paraphrase check. The script recomputes the unsupported flag from each cluster's full member set and stops if it does not reproduce the key's flag on every row. `paraphrase_flagged_<dataset>.csv` has every flagged summary with the summary's content lemmas that occur in no member (`unsupported_lemmas`), its unsupported numbers and entities, `trigger_path` (which rule set the flag off: `lemma_share` for an unsupported share of at least 0.5, `number`, `entity`; the flag fired on the lemmas only if `lemma_share` is there) and each rater's value; fill its `category` column by hand with one of `paraphrase`, `generalisation`, `inflection_tokenisation`, `unshown_members`, `unsupported`. `paraphrase_reverse_<dataset>.csv` holds the summaries a rater marks unsupported where the flag does not fire, with each summary's words split into those in the shown members, only in members not shown, and in no member. Because the flag reads every member, a flagged summary's triggers are absent from all members, shown or not, so `unshown_members` can only apply in the reverse CSV. The script also checks that the raters did not change `summary`, `cluster_size`, `members_shown` or `members` (against the committed blank sheet), that every 0/1 rating is 0, 1 or empty and `members_fit` is between 0 and `members_shown`, and that each cluster's loaded member count equals its `cluster_size`; any failure stops the run with the rater, row and column named.
+
+The report rewrites its own CSVs on every run, so do not fill them in place. Copy them, fill the copies, and pass the copies back (the script refuses a `--categories` path that it writes itself):
+
+```bash
+mkdir -p results/human_eval_filled && cp results/human_eval/paraphrase_*.csv results/human_eval_filled/
+# fill the `category` column of the copies, then rerun the report command above with
+#   --categories results/human_eval_filled/paraphrase_flagged_*.csv results/human_eval_filled/paraphrase_reverse_*.csv
+```
+
+The category counts are given per file, so the flagged and the reverse summaries are counted separately. `--sheet-pattern` and `--kind` (for example `--kind "AI ratings"`) let the same script run on other raters' sheets, for example the AI raters.
+
 ### AI-rater stand-in (not a human rating)
 
 **What was done.** Two independent Claude Sonnet 5.5 instances each rated both blank sheets (40 summaries per dataset) by `docs/summary_audit_rubric.md`. Each saw only the rubric and the sheets: blind to the method, the key, the automatic scores and every other file, and blind to the other rater. Their filled sheets are
@@ -368,15 +396,15 @@ The sample is not random over clusters (it is 10 gold intents chosen by recovery
 
 ```bash
 export HF_HUB_OFFLINE=1
-R=../k-slimeans/results   # the logged runs
+R=results   # the logged runs (run from the repository root)
 python scripts/summary_quality.py $R/clinc150_lsa/20261027-174631 $R/clinc150_qwen3-0.6b/20261027-190908 \
     $R/clinc150_qwen3-1.7b/20261027-202532 $R/clinc150_qwen3-4b/20261027-221042 \
     $R/clinc150_v2_qwen3-0.6b/20261112-200926 $R/clinc150_v2_qwen3-1.7b/20261112-204127 \
     $R/clinc150_v2_qwen3-4b/20261112-181256 $R/prelim_bank77_*/* \
-    --cache-dir ../k-slimeans/cache --out-dir results/summary_quality
+    --cache-dir cache --out-dir results/summary_quality
 python scripts/make_audit_sheet.py <the October run dirs above, without the three v2 runs> \
     --scores results/summary_quality/summary_quality_per_cluster.csv \
-    --cache-dir ../k-slimeans/cache --out-dir docs/results --write-key results/audit_keys
+    --cache-dir cache --out-dir docs/results --write-key results/audit_keys
 python scripts/audit_ai_report.py --sheets-dir docs/results --key-dir results/audit_keys \
     --out docs/results/summary_audit_ai_raters.md
 ```
