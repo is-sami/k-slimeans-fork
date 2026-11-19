@@ -6,7 +6,7 @@ Issue #36, written for the final feedback of #84 ("a short section built from th
 
 **Short answer.**
 
-- On CLINC150 the October order (1.7B above 0.6B above 4B) came largely from how the 4B read that prompt. Under the clearer prompt (#46) no ACC order remains. On ACC no order remains and the data do not show a size effect; a small NMI edge for the 4B (+0.006, 5 of 5 seeds over the 1.7B, uncorrected) is the one exception.
+- On CLINC150 the October order (1.7B above 0.6B above 4B) came largely from how the 4B read that prompt. Under the clearer prompt (#46) no ACC order remains and the data do not show a size effect on ACC; a small NMI edge for the 4B (+0.006, 5 of 5 seeds over the 1.7B, uncorrected) is the one exception.
 - BANKING77 and BBC show no separated size difference at all. Five seeds could not have separated differences of the size seen there.
 - Size, prompt reading and batch size vary together in these runs, so none of them can be called *the* cause of the missing trend.
 
