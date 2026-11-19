@@ -22,7 +22,7 @@ Five seeds, one dataset, one model family. Numbers are means over seeds unless s
 - **Replacement diagnostic (dense control, GPU encode, exact).** All 85 fits replay with 0 label mismatches (relative errors at most 1.5e-7). A summary sits
   0.89-1.07 RMS radii from the centroid it replaces, as in TF-IDF and CLINC150; the cosine (0.35-0.66) is between the two. Seeds 0 and 2 (merged business/tech start) move more points over
   the block (13% against 0.6% net) but have about the same jump (Section 7).
-- **Cost.** About 24 summarizer calls and 84,000-87,000 input tokens per seed in the TF-IDF variant; 27, 46 and 87 s per seed for 0.6B, 1.7B and 4B.
+- **Cost.** About 24 summarizer calls and 84,000-87,000 input tokens per seed in the TF-IDF variant; 27, 46 and 87 s per seed for 0.6B, 1.7B and 4B (batch 8 / 4 / 1, GPU idle-checked at the start of every run).
 
 ## 1. Setup
 
@@ -59,7 +59,7 @@ Five seeds, one dataset, one model family. Numbers are means over seeds unless s
 
 ### 2.1 TF-IDF space
 
-Mean +- standard deviation over seeds 0-4 ([`bbc_tfidf_table.md`](bbc_tfidf_table.md), [`.csv`](bbc_tfidf_table.csv); per seed in [`bbc_tfidf_per_seed.csv`](bbc_tfidf_per_seed.csv)).
+Mean +- standard deviation over seeds 0-4 ([`bbc_tfidf_table.md`](bbc_tfidf_table.md), [`.csv`](bbc_tfidf_table.csv); per seed in [`bbc_tfidf_per_seed.csv`](bbc_tfidf_per_seed.csv)). `s/seed`: SLM rows at batch 8 / 4 / 1 for 0.6B / 1.7B / 4B, GPU idle-checked at the start of every run (Section 6, "Time").
 
 | Method | ACC | NMI | ARI | s/seed | seeds |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -92,7 +92,7 @@ All 10 pairs and 3 metrics: [`bbc_tfidf_paired.md`](bbc_tfidf_paired.md), [`.csv
 
 ### 2.2 Dense control (MiniLM)
 
-Mean +- standard deviation over seeds 0-4 ([`bbc_dense_table.md`](bbc_dense_table.md), [`.csv`](bbc_dense_table.csv), [`bbc_dense_per_seed.csv`](bbc_dense_per_seed.csv)).
+Mean +- standard deviation over seeds 0-4 ([`bbc_dense_table.md`](bbc_dense_table.md), [`.csv`](bbc_dense_table.csv), [`bbc_dense_per_seed.csv`](bbc_dense_per_seed.csv)). `s/seed`: SLM rows at batch 8 / 4 / 1 for 0.6B / 1.7B / 4B, GPU idle-checked at the start of every run.
 The s/seed column is not comparable with the TF-IDF one: the loop stopped before the fifth summary step in several seeds (Section 6).
 
 | Method | ACC | NMI | ARI | s/seed | seeds |

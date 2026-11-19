@@ -15,7 +15,7 @@ Issue #31. This is the Bank77 preliminary comparison (#20, [`prelim_bank77.md`](
   - This is an association, not yet a tested cause (#33).
 - **LSA is still the baseline to beat.** It beats k-means on every metric on both datasets. No SLM size beats LSA with an interval that excludes zero on either dataset.
 - **The rankings flip between datasets.** On BANKING77 the 4B had the best SLM means on ACC and ARI and the 1.7B the weakest. With one model family, two datasets and 5 seeds, this is not a size trend.
-- **Cost:** about 700 summarizer calls and 1.1 million input tokens per seed for every size; 15, 21 and 31 minutes per seed for the 0.6B, 1.7B and 4B, against 24 s for LSA. The times mix model size with batch size and were inflated by roughly 1.7× during the run, most likely by a background GPU load; the code is not the cause (Section 3). Re-timed at step 1 of seed 0 on an idle card: 1.15 to 1.76 times, by size ([`cost_timing.md`](cost_timing.md)).
+- **Cost:** about 700 summarizer calls and 1.1 million input tokens per seed for every size; 15, 21 and 31 minutes per seed for the 0.6B, 1.7B and 4B, against 24 s for LSA (batch 8 / 4 / 1 for 0.6B / 1.7B / 4B; the card was not idle-checked). The times mix model size with batch size and were inflated by roughly 1.7× during the run, most likely by a background GPU load; the code is not the cause (Section 3). Re-timed at step 1 of seed 0 on an idle card: 1.15 to 1.76 times, by size ([`cost_timing.md`](cost_timing.md)).
 
 ## 1. Protocol
 
@@ -43,7 +43,7 @@ All settings were fixed before the run (`configs/clinc150_summarizers.yaml`, `sc
 
 ### 2.1 Means over seeds 0–4
 
-Mean ± standard deviation over the 5 seeds. `s/seed` is wall-clock time per seed; see Section 3 before reading it.
+Mean ± standard deviation over the 5 seeds. `s/seed` is wall-clock time per seed (SLM rows: batch 8 / 4 / 1 for 0.6B / 1.7B / 4B, card not idle-checked); see Section 3 before reading it.
 
 | Method | ACC | NMI | ARI | s/seed | seeds |
 | --- | ---: | ---: | ---: | ---: | ---: |

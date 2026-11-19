@@ -1,0 +1,4 @@
+item,unit,usd,source,checked
+gpu,hour,0.50,TEST DATA - made-up number for unit tests only,2000-01-01
+api_input:test-model,1M tokens,2.00,TEST DATA - made-up number for unit tests only,2000-01-01
+api_output:test-model,1M tokens,8.00,TEST DATA - made-up number for unit tests only,2000-01-01

@@ -233,7 +233,7 @@ The #31 rows are the old-prompt runs; "k-SLMmeans-v2" marks the clearer prompt. 
 | k-SLMmeans-v2 (Qwen3-1.7B) | 0.563 ± 0.007 | 0.754 ± 0.006 | 0.454 ± 0.010 | 744.4 | 5 |
 | k-SLMmeans-v2 (Qwen3-4B) | 0.568 ± 0.010 | 0.760 ± 0.005 | 0.457 ± 0.012 | 1098.8 | 5 |
 
-Mean ± standard deviation over seeds. The s/seed column is not comparable across the old and clearer prompt, and the v2 1.7B
+Mean ± standard deviation over seeds. s/seed: batch 8 / 4 / 1 for 0.6B / 1.7B / 4B in both prompts; the #31 rows were not idle-checked, the v2 rows were idle at the start. The s/seed column is not comparable across the old and clearer prompt, and the v2 1.7B
 figure is not a clean timing at all: its later seeds ran slowly while a foreign GPU user may have been present (Section 8.4). The k-means and LSA rows are from the #31 LSA run; neither depends on the prompt.
 
 Under the old prompt the means ranged from 0.511 to 0.570 ACC across sizes. Under the clearer prompt they range from 0.563 to 0.568.
