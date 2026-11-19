@@ -31,15 +31,10 @@ def _cost(rows: list[dict]) -> pd.DataFrame:
     return pd.DataFrame(out)
 
 
-def _per_seed() -> pd.DataFrame:
-    # 3 seeds. LSA beats k-means by 0.02 every seed; the SLM beats LSA by a noisy +-0.02 and k-means by a steady 0.05.
-    acc = {
-        "k-means": [0.50, 0.51, 0.52],
-        ct.LSA: [0.52, 0.53, 0.54],
-        SLM: [0.55, 0.56, 0.57],
-    }
-    slm_vs_lsa = [0.03, 0.03, 0.03]
-    acc[SLM] = [a + d for a, d in zip(acc[ct.LSA], slm_vs_lsa)]
+def _per_seed(slm_vs_lsa: float = 0.03) -> pd.DataFrame:
+    # 3 seeds. LSA beats k-means by 0.02 every seed; the SLM differs from LSA by `slm_vs_lsa` every seed.
+    lsa = [0.52, 0.53, 0.54]
+    acc = {"k-means": [0.50, 0.51, 0.52], ct.LSA: lsa, SLM: [a + slm_vs_lsa for a in lsa]}
     rows = [
         {"method": m, "seed": s, "acc": v, "nmi": v, "ari": v, "runtime_s": 1.0}
         for m, vals in acc.items()
@@ -48,7 +43,7 @@ def _per_seed() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _rows(prices=None, per_seed=None) -> pd.DataFrame:
+def _rows(prices=None, per_seed=None, slm_seconds: float = 602.0) -> pd.DataFrame:
     per_seed = _per_seed() if per_seed is None else per_seed
     cost = _cost(
         [
@@ -59,7 +54,7 @@ def _rows(prices=None, per_seed=None) -> pd.DataFrame:
                 "n_calls": 12,
                 "input_tokens": 1_000_000,
                 "output_tokens": 50_000,
-                "summarizer_seconds": 602.0,
+                "summarizer_seconds": slm_seconds,
                 "runtime_s": 610.0,
                 "batch_size": 4,
                 "gpu_idle": True,
@@ -134,6 +129,39 @@ def test_rows_noisy_difference_is_no_measured_benefit():
     rows = _rows(per_seed=per_seed).set_index("method")
     assert rows.loc[SLM, "lsa_status"] == "no_benefit"
     assert np.isnan(rows.loc[SLM, "lsa_seconds_per_point"])
+
+
+def test_rows_loss_status_has_no_ratio():
+    rows = _rows(per_seed=_per_seed(slm_vs_lsa=-0.03)).set_index("method")
+    assert rows.loc[SLM, "lsa_status"] == "loss"
+    assert rows.loc[SLM, "lsa_points"] == pytest.approx(-3.0)
+    assert np.isnan(rows.loc[SLM, "lsa_seconds_per_point"])
+
+
+def test_rows_benefit_that_is_not_costlier_has_no_ratio():
+    rows = _rows(slm_seconds=1.0).set_index("method")  # cheaper than LSA's 2.0 s
+    assert rows.loc[SLM, "lsa_status"] == "benefit_no_extra_cost"
+    assert np.isnan(rows.loc[SLM, "lsa_seconds_per_point"])
+    assert rows.loc[SLM, "kmeans_status"] == "benefit"  # still costlier than k-means (0 s)
+
+
+def test_priced_no_benefit_row_keeps_dollars_per_point_empty():
+    per_seed = _per_seed()
+    per_seed.loc[(per_seed.method == SLM) & (per_seed.seed == 0), ["acc", "nmi", "ari"]] -= 0.10
+    rows = _rows(prices=ct.load_prices(FIXTURE), per_seed=per_seed).set_index("method")
+    assert rows.loc[SLM, "lsa_status"] == "no_benefit"
+    assert rows.loc[SLM, "local_usd"] > 0  # priced
+    assert np.isnan(rows.loc[SLM, "lsa_usd_per_point:local"])
+    assert np.isnan(rows.loc[SLM, "lsa_usd_per_point:test-model"])
+
+
+def test_descriptive_only_rows_have_no_extra_seconds():
+    spec = ct.DatasetSpec("toy", "Toy", (), "p", descriptive_only=True)
+    per_seed = _per_seed()
+    per_seed = per_seed[per_seed.seed == 0]
+    cost = _cost([{"method": "k-means", "runtime_s": 118.0}, {"method": ct.LSA, "runtime_s": 39.0}, {"method": SLM, "runtime_s": 5885.0}])
+    rows = ct.build_rows(spec, cost, per_seed, paired_differences(per_seed, list(ct.REFERENCES)))
+    assert rows[["lsa_extra_seconds", "kmeans_extra_seconds"]].isna().all().all()
 
 
 def test_rows_run_total_seconds_when_no_summarizer_seconds_logged():
@@ -255,6 +283,31 @@ def test_collect_reads_run_directories(tmp_path):
     assert rows.loc[SLM, "vs_lsa_acc_diff"] == pytest.approx(0.03)
     with pytest.raises(FileNotFoundError):
         ct.collect(ct.DatasetSpec("x", "X", ("missing/stamp",), "p"), tmp_path / "results")
+
+
+def test_resolve_results_root_accepts_checkout_or_results_dir(tmp_path):
+    (tmp_path / "results").mkdir()
+    assert ct.resolve_results_root(tmp_path) == tmp_path / "results"
+    assert ct.resolve_results_root(tmp_path / "results") == tmp_path / "results"
+    assert ct.resolve_results_root(str(tmp_path)) == tmp_path / "results"
+
+
+def test_intervals_match_committed_paired_csvs_when_results_are_available():
+    """Optional: set KSLIMEANS_RESULTS to a checkout (or its results/) holding the runs."""
+    import os
+
+    env = os.environ.get("KSLIMEANS_RESULTS")
+    if not env:
+        pytest.skip("KSLIMEANS_RESULTS not set")
+    docs = Path(__file__).resolve().parent.parent / "docs" / "results"
+    for key, name in (("bbc_tfidf", "bbc_tfidf_paired.csv"), ("bbc_dense", "bbc_dense_paired.csv"), ("clinc150", "prompt_test_paired.csv")):
+        spec = next(d for d in ct.DATASETS if d.key == key)
+        rows = ct.collect(spec, ct.resolve_results_root(env)).set_index("method")
+        committed = pd.read_csv(docs / name)
+        for _, r in committed[committed["reference"].isin(ct.REFERENCES) & committed["method"].isin(rows.index)].iterrows():
+            ref = "lsa" if r["reference"] == ct.LSA else "kmeans"
+            for col, src in (("diff", "mean_diff"), ("lo", "ci_low"), ("hi", "ci_high")):
+                assert rows.loc[r["method"], f"vs_{ref}_{r['metric']}_{col}"] == pytest.approx(r[src], abs=1e-9)
 
 
 def test_script_is_executable_with_shebang():

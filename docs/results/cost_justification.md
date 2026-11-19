@@ -17,8 +17,8 @@ One row per (dataset, method[, prompt]): seeds, summarizer calls, input and outp
 | Code | Meaning |
 | --- | --- |
 | `-` | CPU method (k-means; LSA summarizer), no card involved |
-| `A` | card idle-checked at the start and clean during the run (non-torch memory within about our own CUDA context, +137 to +139 MiB) |
-| `B` | card not idle-checked (the run predates #35). CLINC150 October prompt only: at step 1 of seed 0 the logged seconds were **1.76 / 1.72 / 1.15 times** the idle-card seconds for 0.6B / 1.7B / 4B (`cost_timing.md` section 4, one step of one seed per size). **The whole-run inflation was not measured**; the full-seed re-time was dropped |
+| `A` | card idle-checked at the start and clean during the run (non-torch memory within about our own CUDA context, +137 to +139 MiB). For BBC, light low-priority CPU work for other issues ran alongside, so the CPU-side parts of those seconds may be slightly inflated; the GPU part is clean (`bbc.md`, "Time") |
+| `B` | card not idle-checked (the run predates #35). CLINC150 October prompt only: at step 1 of seed 0 the logged seconds were **1.76 / 1.72 / 1.15 times** the idle-card seconds for 0.6B / 1.7B / 4B (`cost_timing.md` section 4, one step of one seed per size). **The whole-run inflation was not measured**; the full-seed re-time was dropped. Step 1 was the least inflated step of the 0.6B and 4B runs (later steps ran slower per output token, `cost_timing.md` section 4), so 1.76 / 1.72 / 1.15 are probably lower bounds for the whole run; they are not a whole-run correction and are not applied |
 | `C` | card not idle-checked, inflation not measured (BANKING77; one BANKING77 check had estimated about 1.7x, from a single run) |
 | `D` | idle at start, but 1,625 MiB of foreign memory seen during the run: not a clean timing (CLINC150 v2 1.7B; its seed-to-seed sd is 198 s against 9 and 21 s for the other two v2 runs) |
 | `E` | the run overlapped other jobs, so the seconds are an upper bound on idle-card seconds (the arXiv pilot) |
@@ -29,7 +29,7 @@ Batch sizes differ by model (CLINC150 and BBC 8 / 4 / 1 for 0.6B / 1.7B / 4B, BA
 
 ## 2. The summary view
 
-ACC columns are in ACC units (0.01 = one ACC point); the intervals are paired differences over seeds. "s per ACC point" is (row seconds minus the reference's seconds) divided by the ACC difference in points, shown **only when the interval's lower end is above 0**; "measured loss" means the interval is entirely below 0, and "no measured benefit" that it contains 0 (or, for arXiv, that there is one seed and so no interval). k-means has no summarizer, so its seconds are 0 where the dataset's seconds are summarizer seconds. `*`: seconds of the whole method, not summarizer seconds. NMI and ARI differences are in the full table; the rule is applied to ACC only.
+ACC columns are in ACC units (0.01 = one ACC point); the intervals are paired differences over seeds. "s per ACC point" is (row seconds minus the reference's seconds) divided by the ACC difference in points, shown **only when the interval's lower end is above 0**; "measured loss" means the interval is entirely below 0, and "no measured benefit" that it contains 0. arXiv has one seed, so no interval: its cells are `n/a`, and its extra seconds are left empty in the CSV because its k-means, LSA and pilot seconds come from different shared-machine conditions and bases. k-means has no summarizer, so its seconds are 0 where the dataset's seconds are summarizer seconds. `*`: seconds of the whole method, not summarizer seconds. NMI and ARI differences are in the full table; the rule is applied to ACC only.
 
 | Dataset | Method | ACC | seconds | timing | ACC vs LSA | s per ACC point vs LSA | ACC vs k-means | s per ACC point vs k-means |
 | --- | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: |
@@ -62,7 +62,7 @@ ACC columns are in ACC units (0.01 = one ACC point); the intervals are paired di
 
 ![ACC against summarizer seconds](cost_justification_pareto.png)
 
-Mean ACC ± sd over seeds against seconds (log x), one panel per dataset, k-means as the dashed line. The x positions of the CLINC150 October-prompt points (and all BANKING77 points) carry the inflation described above; the arXiv panel is one seed.
+Mean ACC ± sd over seeds against seconds (log x), one panel per dataset, k-means as the dashed line. The error bars are across-seed standard deviations, **not** the paired interval used for the gate (a bar that overlaps another point does not decide the gate either way). Points with timing code B, C, D or E are marked at the point. The x positions of the CLINC150 October-prompt points (and all BANKING77 points) carry the inflation described above; the arXiv panel is one seed.
 
 ## 3. Reading it, dataset by dataset
 
@@ -71,8 +71,8 @@ Scoped to what ran. With 5 seeds the intervals are wide, so "no measured benefit
 **CLINC150 (5 seeds, both prompts).**
 - LSA gains +0.009 ACC over k-means (interval excludes 0) for 14.8 s of summarizer time, 16.6 s per ACC point.
 - October prompt: the 1.7B is the only SLM clearly above k-means (+0.018 [+0.004, +0.033]) and is not distinguishable from LSA (+0.010 [-0.011, +0.030]), at 84 times LSA's summarizer seconds (logged, with the step-1 inflation above). The 0.6B and 4B are clearly below LSA and below k-means: more cost bought less ACC.
-- v2 prompt: all three sizes are above k-means (+0.011 to +0.016, intervals exclude 0), and none is distinguishable from LSA (+0.002 to +0.007, all intervals contain 0). Against k-means the clean-timing runs cost about 335 s (0.6B) and 677 s (4B) per ACC point, against 16.6 s for LSA; the 1.7B's 635 s is not a clean timing (`D`).
-- So on CLINC150 LSA captures the measured gain over k-means at roughly 1/25 to 1/125 of the summarizer seconds. An SLM is not shown to be worth its extra seconds here; whether the v2 SLMs add anything over LSA cannot be told from 5 seeds.
+- v2 prompt: all three sizes are above k-means (+0.011 to +0.016, intervals exclude 0), and none is distinguishable from LSA on ACC (+0.002 to +0.007, all intervals contain 0); the exception is the 4B's NMI against LSA, +0.008 [+0.002, +0.014], which is not gated. Against k-means the clean-timing runs cost about 335 s (0.6B) and 677 s (4B) per ACC point, against 16.6 s for LSA; the 1.7B's 635 s is not a clean timing (`D`).
+- Among the rows that gain over k-means (LSA, the October 1.7B and the three v2 sizes), LSA's summarizer seconds are 1/25 to 1/84 of an SLM's (logged; the October 4B, at 1/125, is a loss and is left out). The SLM means that are higher than LSA's are not distinguishable from it on ACC, so an SLM is not shown to be worth its extra seconds here; whether the v2 SLMs add anything over LSA cannot be told from 5 seeds.
 
 **BANKING77 (5 seeds, upstream prompt, timings of code `C`).**
 - LSA gains +0.014 [+0.006, +0.022] ACC over k-means for 1.3 extra seconds. No SLM size has an ACC interval excluding 0 against either reference.
@@ -80,7 +80,7 @@ Scoped to what ran. With 5 seeds the intervals are wide, so "no measured benefit
 
 **BBC, TF-IDF and dense (500 articles, 5 seeds, #18).**
 - TF-IDF: no ACC interval excludes 0, against LSA or k-means, for LSA or any SLM (k-means ACC sd 0.080 over seeds). The 1.7B's NMI against LSA is +0.052 [+0.001, +0.103] and its ARI against k-means +0.125 [+0.007, +0.243], but these are other metrics, not gated, and weak (lower ends at 0.001 and 0.007).
-- Dense: the 1.7B and 4B are above LSA on ACC by +0.006 [+0.001, +0.012] and +0.005 [+0.001, +0.009], which costs 24 and 38 extra seconds (code `A`, clean timings): 36.6 and 79.1 s per ACC point over LSA. These are 0.5 to 0.6 ACC points. Against k-means nothing is clear. The k-means and LSA ACC spreads over seeds are large (sd 0.129 and 0.131), the 0.6B has the highest mean (0.960, sd 0.001) but its interval against LSA is [-0.100, +0.226], and these intervals are uncorrected; treat the dense gap as small and suggestive. It is the only place in this table where an SLM has a measured ACC gain over LSA.
+- Dense: the 1.7B and 4B are above LSA on ACC by +0.006 [+0.001, +0.012] and +0.005 [+0.001, +0.009], which costs 24 and 38 extra seconds (code `A`, clean timings): 36.6 and 79.1 s per ACC point over LSA. These are 0.5 to 0.6 ACC points. Against k-means nothing is clear. The k-means and LSA ACC spreads over seeds are large (sd 0.129 and 0.131), the 0.6B has the highest mean (0.960, sd 0.001) but its interval against LSA is [-0.100, +0.226], and these intervals are uncorrected; treat the dense gap as small and suggestive. Per-point seconds also depend on step counts: the dense runs stopped before the fifth summary step in several seeds (`bbc.md`, Section 6), so calls per seed differ (15.2 / 13.0 / 11.0 for 0.6B / 1.7B / 4B against 13.0 for LSA) and the seconds per ACC point are not at equal work. It is the only measured ACC gain over LSA in this table.
 - On the 500-article corpus the whole cost is small in absolute terms (under 90 s per seed for any SLM).
 
 **arXiv 200k, seed 0 (descriptive only).**
@@ -88,9 +88,9 @@ Scoped to what ran. With 5 seeds the intervals are wide, so "no measured benefit
 - The pilot took 5,885 s (code `E`: concurrent jobs, upper bound), 1.75 s per scheduled call, against 39 s for the LSA clustering plus 3,319 s of one-off segmentation, and 118 s for k-means. No comparison is claimed (`arxiv_status.md`).
 
 **When the extractive summarizer is the better choice, and when an SLM is worth it (what ran).**
-- Where the paired ACC interval against LSA contains 0 (CLINC150 with either prompt, BANKING77, BBC TF-IDF, arXiv), the SLMs show no measured benefit over LSA, and LSA costs 10 to 240 times fewer seconds as logged. Where it is clearly below 0 (CLINC150 October 0.6B and 4B), the SLM costs more and does worse. LSA is the better choice on all of these.
-- An SLM paid for itself in this data only in one place: BBC with the dense embedder, where the 1.7B and 4B beat LSA by about half an ACC point for 24 to 38 more seconds per seed on a 500-article corpus.
-- Where the data cannot tell: the CLINC150 v2 prompt (SLMs above k-means, not distinguishable from LSA), BBC TF-IDF, and arXiv (1 seed).
+- Where the paired ACC interval against LSA contains 0 (CLINC150 with either prompt, BANKING77, BBC TF-IDF), the SLMs show no measured benefit over LSA, and LSA costs less: 10 to 125 times fewer summarizer seconds as logged on CLINC150 and BBC (25 to 125 on CLINC150, 10 to 34 on BBC TF-IDF, 21 to 47 on BBC dense), and 65 to 241 times fewer whole-method seconds on BANKING77 (a different seconds basis, so not pooled). Where the interval is clearly below 0 (CLINC150 October 0.6B and 4B), the SLM costs more and does worse. LSA is the better choice on all of these.
+- The only measured ACC gain of an SLM over LSA is BBC with the dense embedder: +0.5 to +0.6 ACC points for the 1.7B and 4B, uncorrected for the many paired comparisons made (`progress_nov16.md`: 2 of 30 BBC intervals exclude 0), lower interval ends at +0.001, 24 to 38 more seconds per seed on a 500-article corpus at unequal step counts, and unpriced (pending #10).
+- Where the data cannot tell: the CLINC150 v2 prompt (SLMs above k-means, not distinguishable from LSA on ACC), BBC TF-IDF, and arXiv (1 seed, no interval).
 - One model family, one prompt per dataset except CLINC150, greedy decoding, one GPU, batch sizes that differ by model: the table does not separate model size from batching, and says nothing about larger models or about summary quality (#38, #50).
 
 ## 4. Prices
@@ -105,12 +105,14 @@ A small example file with made-up numbers, for the unit tests only, is `tests/fi
 
 ## 5. Reproduce
 
-Run from the checkout that holds `results/` (the runs are not in git; the run directories are listed in `kslimeans.cost_table.DATASETS`). CPU only, a few seconds:
+Run from the repo root of the checkout that holds `results/` (the runs are not in git; the run directories are listed in `kslimeans.cost_table.DATASETS`). `--results` takes that checkout or its `results/` directory (default: the current directory). CPU only, a few seconds:
 
 ```
-python scripts/cost_table.py --results <checkout with results/> --out-dir docs/results
+python scripts/cost_table.py --out-dir docs/results
+# from another checkout (a worktree, say), pointing at the one that holds the runs:
+python scripts/cost_table.py --results <checkout or its results/ directory> --out-dir docs/results
 # with prices, once docs/cost_assumptions.md exists (#10):
-python scripts/cost_table.py --results <checkout with results/> --out-dir docs/results --prices prices.csv
+python scripts/cost_table.py --out-dir docs/results --prices prices.csv
 ```
 
-It writes `cost_justification_table.csv`, `cost_justification_table.md` and `cost_justification_pareto.png`. The summary table of section 2 is the same data, reduced to the ACC columns. Tests: `tests/test_cost_table.py`.
+It writes `cost_justification_table.csv`, `cost_justification_table.md` and `cost_justification_pareto.png`. The summary table of section 2 is the same data, reduced to the ACC columns. Tests: `tests/test_cost_table.py` (set `KSLIMEANS_RESULTS` to also check the intervals against the committed paired CSVs).

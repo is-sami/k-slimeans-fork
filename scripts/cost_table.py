@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from kslimeans.cost_table import DATASETS, collect, flat_csv, load_prices, render_all, short_name
+from kslimeans.cost_table import DATASETS, collect, flat_csv, load_prices, render_all, resolve_results_root, short_name
 
 KMEANS_COLOR = "#666666"
 FAMILY_COLOR = {"lsa": "#1b9e77", "0.6B": "#d95f02", "1.7B": "#7570b3", "4B": "#e7298a"}
@@ -59,7 +59,7 @@ def plot_pareto(frames: dict[str, pd.DataFrame], titles: dict[str, str], path: P
                 elinewidth=1, capsize=2, linestyle="none",
             )  # fmt: skip
             ax.annotate(
-                short_name(r), (r["seconds"], r["acc_mean"]), textcoords="offset points", xytext=(-7, -12) if v2 else (6, 5),
+                short_name(r) + (f" [{r['timing_code']}]" if r["timing_code"] in "BCDE" else ""), (r["seconds"], r["acc_mean"]), textcoords="offset points", xytext=(-7, -12) if v2 else (6, 5),
                 ha="right" if v2 else "left", fontsize=8, color=color,
             )  # fmt: skip
         ax.set_xscale("log")
@@ -73,10 +73,11 @@ def plot_pareto(frames: dict[str, pd.DataFrame], titles: dict[str, str], path: P
     note = flat[-1]
     note.text(
         0, 0.9,
-        "Mean ACC ± sd over seeds (5 seeds; arXiv: 1 seed).\nDashed line: k-means.  Square: LSA.\n"
+        "Mean ACC ± sd over seeds (5 seeds; arXiv: 1 seed). The bars\nare across-seed sd, not the paired interval of the gate.\nDashed line: k-means.  Square: LSA.\n"
         "Filled: October / dataset prompt.  Open: v2 prompt.\n\n"
         "Seconds are as logged: the CLINC150 October-prompt\nruns were not idle-checked (step 1 of seed 0 was\n"
         "1.76 / 1.72 / 1.15 times slower than on an idle card\nfor 0.6B / 1.7B / 4B; whole-run inflation not\nmeasured); the v2 1.7B run is not clean.\n"
+        "[B] [C] [D] [E]: timing inflated or not clean (timing\ncodes in cost_justification.md).\n"
         "Batch sizes: CLINC150 and BBC 8 / 4 / 1,\nBANKING77 8 / 4 / 2, arXiv 4.",
         va="top", fontsize=9, transform=note.transAxes,
     )  # fmt: skip
@@ -89,13 +90,15 @@ def plot_pareto(frames: dict[str, pd.DataFrame], titles: dict[str, str], path: P
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--results", default=".", help="checkout that holds results/ (default: the current directory)")
+    parser.add_argument(
+        "--results", default=".", help="the checkout that holds results/, or that results/ directory (default: the current directory)"
+    )
     parser.add_argument("--out-dir", default="docs/results", help="where the CSV, markdown and figure go (default: %(default)s)")
     parser.add_argument("--prices", help="CSV of item,unit,usd,source,checked rows (#10); without it the dollar columns are empty")
     args = parser.parse_args()
 
     prices = load_prices(args.prices)
-    root = Path(args.results) / "results"
+    root = resolve_results_root(args.results)
     frames = {spec.key: collect(spec, root, prices) for spec in DATASETS}
     specs = {spec.key: spec for spec in DATASETS}
     out = Path(args.out_dir)

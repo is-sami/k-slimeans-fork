@@ -418,6 +418,8 @@ def add_cost_per_benefit(frame: pd.DataFrame, api_models: list[str]) -> pd.DataF
     """
     frame = frame.copy()
     by_method = frame.set_index("method")
+    if "descriptive_only" not in frame:
+        frame["descriptive_only"] = False
     names = ["local", *api_models]
     for ref_name, ref_label in (("lsa", LSA), ("kmeans", KMEANS)):
         columns: dict[str, list] = {k: [] for k in ("status", "points", "extra_seconds", "seconds_per_point")}
@@ -430,7 +432,8 @@ def add_cost_per_benefit(frame: pd.DataFrame, api_models: list[str]) -> pd.DataF
                 extra_seconds, extra_usd = np.nan, {n: np.nan for n in names}
             else:
                 ref = by_method.loc[ref_label]
-                extra_seconds = row["seconds"] - ref["seconds"]
+                # One-seed runs are descriptive: their seconds sit on different shared-machine conditions and bases.
+                extra_seconds = np.nan if row["descriptive_only"] else row["seconds"] - ref["seconds"]
                 extra_usd = {"local": row["local_usd"] - ref["local_usd"]}
                 for model in api_models:
                     extra_usd[model] = row[f"api_usd:{model}"] - ref[f"api_usd:{model}"]
@@ -451,6 +454,15 @@ def add_cost_per_benefit(frame: pd.DataFrame, api_models: list[str]) -> pd.DataF
         for key, values in columns.items():
             frame[f"{ref_name}_{key}"] = values
     return frame
+
+
+def resolve_results_root(path: str | Path) -> Path:
+    """The directory that holds the run directories: `path/results` when it exists, else `path` itself.
+
+    So `--results` accepts either a checkout or its `results/` directory.
+    """
+    path = Path(path)
+    return path / "results" if (path / "results").is_dir() else path
 
 
 def collect(spec: DatasetSpec, root: str | Path, prices: Prices | None = None) -> pd.DataFrame:
