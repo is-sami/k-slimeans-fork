@@ -143,3 +143,36 @@ def test_tagging_rows_are_clusters_times_six():
     parsed = list(csv.reader(io.StringIO(text)))
     assert len(parsed) == 19 and all(len(r) == 5 + len(rp.TAG_COLUMNS) for r in parsed)
     assert all(cell == "" for r in parsed[1:] for cell in r[5:])
+
+
+# ------------------------------------------------------------------ glue: partitions and the counterfactual
+
+
+def test_step1_partitions_source_and_after():
+    from kslimeans.runlog import RunRecord
+
+    evolution = [np.array([0, 0, 1]), np.array([0, 1, 1]), np.array([1, 1, 1])]
+    record = RunRecord(method="m", seed=0, assignments_evolution=evolution, summary_source_steps=[0, 1])
+    source, after = rp.step1_partitions(record)
+    assert source.tolist() == [0, 0, 1] and after.tolist() == [0, 1, 1]
+
+
+def _joined(tmp_path, rows):
+    path = tmp_path / "joined.csv"
+    pd.DataFrame(rows, columns=["dataset", "seed", "step", "cluster", "cf_d_member_purity", "method_id"]).to_csv(path, index=False)
+    return path
+
+
+def test_counterfactual_ignores_other_steps_and_reads_per_cluster(tmp_path):
+    path = _joined(tmp_path, [("d", 0, 1, 0, 0.1, "a"), ("d", 0, 1, 0, 0.1, "b"), ("d", 0, 2, 0, 9.0, "a"), ("d", 0, 1, 1, -0.2, "a")])
+    assert rp.counterfactual(path, "d", 0, 2).tolist() == pytest.approx([0.1, -0.2])
+
+
+def test_counterfactual_raises_when_methods_disagree(tmp_path):
+    path = _joined(tmp_path, [("d", 0, 1, 0, 0.1, "a"), ("d", 0, 1, 0, 0.3, "b"), ("d", 0, 1, 1, 0.0, "a")])
+    with pytest.raises(ValueError, match="counterfactual"):
+        rp.counterfactual(path, "d", 0, 2)
+
+
+def test_num_has_no_negative_zero():
+    assert rp.num(-0.00001, 3, sign=True) == "+0.000" and rp.num(-0.00001, 4) == "0.0000" and rp.num(-0.5, 2) == "-0.50"

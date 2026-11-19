@@ -73,7 +73,12 @@ For each cluster, write 3 to 5 lines:
 - a one-line verdict (helped because ..., hurt because ...).
 
 Then add a short paragraph across all 20: what the helped cases have in common, what the hurt ones have in common, and
-**any case that contradicts the synthesis**. Flag those clearly; they matter most. Read `docs/results/synthesis.md`
+**any case that contradicts the synthesis**. Flag those clearly; they matter most.
+
+Check the Arrived list as well: a cluster can be hurt because arrivals change its majority intent, even when few of its own
+members leave (the measure follows the cluster's own members to wherever they end up).
+
+Read `docs/results/synthesis.md`
 section 9 first for context. Deliver `docs/results/synthesis_case_studies.md` in a PR (#50). Don't run anything or change
 the analysis code.\
 """
@@ -106,21 +111,10 @@ def step0_sha1s(root: Path, keys: list[str]) -> dict[str, str | None]:
 # ------------------------------------------------------------------ packet A
 
 
-def counterfactual(joined_csv: Path, k: int) -> np.ndarray:
-    """Per cluster, `cf_d_member_purity` of seed 0 step 1; asserted identical across the methods that carry it."""
-    cols = ["dataset", "seed", "step", "cluster", "method_id", "cf_d_member_purity"]
-    df = pd.read_csv(joined_csv, usecols=cols, low_memory=False)
-    df = df[(df["dataset"] == DATASET) & (df["seed"] == SEED) & (df["step"] == 1)].dropna(subset=["cf_d_member_purity"])
-    spread = df.groupby("cluster")["cf_d_member_purity"].agg(["min", "max", "count"])
-    if len(spread) != k or (spread["max"] - spread["min"]).max() > 1e-9:
-        raise ValueError(f"{joined_csv}: the counterfactual is not one value per cluster ({len(spread)} clusters)")
-    return spread["min"].sort_index().to_numpy()
-
-
 def build_packet_a(root: Path, ds, joined_csv: Path) -> tuple[str, list[list]]:
     records = load_records(root, PACKET_A_RUNS)
     k = len(next(iter(records.values())).summaries_evolution[0])
-    cf = counterfactual(joined_csv, k)
+    cf = rp.counterfactual(joined_csv, DATASET, SEED, k)
     gold, names, texts = ds.labels, ds.label_names, ds.texts
 
     parts = {key: rp.step1_partitions(rec) for key, rec in records.items()}
@@ -152,8 +146,8 @@ def build_packet_a(root: Path, ds, joined_csv: Path) -> tuple[str, list[list]]:
             n_left=len(mv["left"]), left=left_ids, n_arrived=len(mv["arrived"]), arrived=arrived_ids,
         )  # fmt: skip
         blocks.append(rp.render_case(case, texts, gold, names, lambda i, m=majority: names[m[i]], lambda i, s=source: int(s[i])))
-        csv_rows.append([pick.side, pick.rank, LABELS[key], c, case.size, f"{case.purity:.4f}", f"{case.score:.4f}",
-                         f"{case.d_member_purity:.4f}", f"{case.cf_d_member_purity:.4f}", case.n_left, case.n_arrived,
+        csv_rows.append([pick.side, pick.rank, LABELS[key], c, case.size, rp.num(case.purity, 4), rp.num(case.score, 4),
+                         rp.num(case.d_member_purity, 4), rp.num(case.cf_d_member_purity, 4), case.n_left, case.n_arrived,
                          rp.composition_text(case.composition, case.size), case.summary])  # fmt: skip
     return render_packet_a(blocks, picks), csv_rows
 
@@ -189,6 +183,7 @@ The rule was fixed before any text was read and uses numbers only.
   {PER_METHOD_CAP} on that side, or (first pass) if its cluster id is already on that side. If the first pass cannot fill 10,
   a second pass takes the next-ranked candidates without the distinct-id condition (the cap still holds).
   Equal scores are ordered by run (LSA, 0.6B, 1.7B, 4B, 4B clearer prompt) and then by cluster id.
+- **Rank** is the pick order within a side (pass 1 first, then pass 2), not strictly the score order.
 - **This packet:** {counts}. {n_pass2} of the 20 came from the second pass (a repeated cluster id on its side).
 - **Purity ceiling:** a cluster with purity above 0.9 cannot be helped by much (purity cannot exceed 1), so the helped side is
   mostly clusters that were mixed before, and the hurt side is where a pure cluster had room to fall. This selection
@@ -246,7 +241,7 @@ def build_packet_b(root: Path, ds) -> tuple[str, str, dict]:
                 [
                     f"### Cluster {c}",
                     "",
-                    f"- **Size:** {len(members)} members; **purity before:** {purity[c]:.2f} (bin {bin_name})",
+                    f"- **Size:** {len(members)} members; **purity before:** {rp.num(purity[c], 2)} (bin {bin_name})",
                     f"- **Gold intents:** {rp.md_escape(rp.composition_text(rp.intent_composition(gold[members], names, 4), len(members)))}",
                     "",
                     f"**{len(sample)} members**",

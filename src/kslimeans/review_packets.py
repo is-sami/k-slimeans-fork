@@ -46,6 +46,27 @@ TAG_COLUMNS = (
 # ------------------------------------------------------------------ partitions of a run
 
 
+def num(x: float, digits: int = 3, sign: bool = False) -> str:
+    """`x` formatted to `digits` places without a negative zero (`-0.000` becomes `0.000`)."""
+    x = round(float(x), digits) + 0.0
+    return f"{x:+.{digits}f}" if sign else f"{x:.{digits}f}"
+
+
+def counterfactual(joined_csv, dataset: str, seed: int, k: int) -> np.ndarray:
+    """Per cluster, `cf_d_member_purity` of `seed` at step 1 from the synthesis' joined CSV.
+
+    Rows of other datasets, seeds and steps are ignored. The counterfactual (plain Lloyd from the step-0 state) is the
+    same for every method of a seed, so `ValueError` if the methods disagree or the clusters are not exactly `k`.
+    """
+    cols = ["dataset", "seed", "step", "cluster", "cf_d_member_purity"]
+    df = pd.read_csv(joined_csv, usecols=cols, low_memory=False)
+    df = df[(df["dataset"] == dataset) & (df["seed"] == seed) & (df["step"] == 1)].dropna(subset=["cf_d_member_purity"])
+    spread = df.groupby("cluster")["cf_d_member_purity"].agg(["min", "max"])
+    if len(spread) != k or (spread["max"] - spread["min"]).max() > 1e-9:
+        raise ValueError(f"{joined_csv}: the counterfactual is not one value per cluster ({len(spread)} clusters)")
+    return spread["min"].sort_index().to_numpy()
+
+
 def step1_partitions(record: RunRecord) -> tuple[np.ndarray, np.ndarray]:
     """`(source, after)` labels of summary step 1: the partition it was written from and the one after its Lloyd block."""
     return record.source_partition(0), record.partition_after(0)
@@ -95,7 +116,8 @@ def select_cases(scores: pd.DataFrame, per_side: int, per_method_cap: int, metho
     from the same ranking without the distinct-id condition (the cap still applies). Only rows with a strictly
     positive (helped) or negative (hurt) score qualify, and NaN scores are ignored.
 
-    Returns `side`, `rank` (1-based within side), `method`, `cluster`, `score`, `pass` (1 or 2).
+    Returns `side`, `rank` (1-based within side, in pick order: pass 1 before pass 2, so a pass-2 row can have a larger
+    score than a pass-1 row ranked above it), `method`, `cluster`, `score`, `pass` (1 or 2).
     """
     order = {m: i for i, m in enumerate(method_order)}
     unknown = set(scores["method"]) - set(order)
@@ -263,9 +285,9 @@ def render_case(case: CaseInputs, texts: list[str], gold: np.ndarray, names: lis
         [
             f"### {title}",
             "",
-            f"- **Size:** {case.size} members; **purity before:** {case.purity:.2f}",
-            f"- **Selection number:** {case.score:+.3f} = change in member purity {case.d_member_purity:+.3f} "
-            f"minus the no-replacement counterfactual {case.cf_d_member_purity:+.3f}",
+            f"- **Size:** {case.size} members; **purity before:** {num(case.purity, 2)}",
+            f"- **Selection number:** {num(case.score, sign=True)} = change in member purity {num(case.d_member_purity, sign=True)} "
+            f"minus the no-replacement counterfactual {num(case.cf_d_member_purity, sign=True)}",
             f"- **Gold intents before:** {md_escape(composition_text(case.composition, case.size))}",
             "",
             "**Summary**",

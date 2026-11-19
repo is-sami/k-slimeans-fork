@@ -1,6 +1,6 @@
 side,rank,method,cluster,size,purity_before,selection_number,d_member_purity,counterfactual_d_member_purity,n_left,n_arrived,gold_intents,summary
 helped,1,"Qwen3-4B, old prompt",92,136,0.4853,0.4044,0.4044,0.0000,75,4,"change_speed 66 (49%), change_volume 60 (44%), whisper_mode 3 (2%), what_song 2 (1%), definition 1 (1%)",What are the common requests users have for adjusting the speech speed and volume of the assistant?
-helped,2,extractive (LSA),73,133,0.5263,0.3985,0.3985,-0.0000,80,3,"insurance 70 (53%), vaccines 51 (38%), insurance_change 3 (2%), directions 2 (2%), carry_on 1 (1%)","what health benefits do i have
+helped,2,extractive (LSA),73,133,0.5263,0.3985,0.3985,0.0000,80,3,"insurance 70 (53%), vaccines 51 (38%), insurance_change 3 (2%), directions 2 (2%), carry_on 1 (1%)","what health benefits do i have
 do i need to get vaccines before my trip
 can you let me know what health plan i'm on
 which vaccines are meant for cuba
@@ -8,21 +8,21 @@ do i need vaccinations to travel there"
 helped,3,"Qwen3-4B, old prompt",46,77,0.2338,0.3636,0.3636,0.0000,76,209,"book_flight 18 (23%), distance 9 (12%), time 7 (9%), carry_on 6 (8%), timezone 6 (8%)",What is the summary of the following cluster of questions?
 helped,4,"Qwen3-0.6B, old prompt",60,274,0.4380,0.3504,0.3504,0.0000,139,10,"where_are_you_from 120 (44%), who_made_you 120 (44%), how_old_are_you 21 (8%), meaning_of_life 2 (1%), repeat 2 (1%)",What is the purpose of creation?
 helped,5,"Qwen3-4B, old prompt",129,183,0.5738,0.3497,0.3497,0.0000,114,13,"traffic 105 (57%), travel_alert 68 (37%), travel_suggestion 4 (2%), current_location 2 (1%), directions 1 (1%)",What are the current travel alerts for various countries and regions?
-helped,6,"Qwen3-4B, clearer prompt",134,150,0.3067,0.3200,0.3200,-0.0000,62,80,"make_call 46 (31%), change_accent 41 (27%), change_user_name 16 (11%), change_ai_name 12 (8%), share_location 11 (7%)",How can I request to be called by a specific name or set a phone call reminder?
-helped,7,"Qwen3-0.6B, old prompt",123,243,0.4115,0.2840,0.2840,-0.0000,168,77,"accept_reservations 100 (41%), confirm_reservation 44 (18%), restaurant_reviews 41 (17%), translate 7 (3%), book_hotel 6 (2%)","How would you say ""I am a tourist"" if you were Mongolian?"
-helped,8,"Qwen3-0.6B, old prompt",6,273,0.5238,0.2784,0.2784,-0.0000,151,58,"tell_joke 143 (52%), fun_fact 103 (38%), restaurant_reviews 7 (3%), travel_suggestion 6 (2%), definition 3 (1%)",What are some fun facts about the world?
-helped,9,"Qwen3-0.6B, old prompt",27,258,0.5620,0.2752,0.2752,-0.0000,82,10,"update_playlist 145 (56%), play_music 95 (37%), share_location 3 (1%), travel_suggestion 3 (1%), change_language 2 (1%)",What is the name of the song currently playing on your speakers?
+helped,6,"Qwen3-4B, clearer prompt",134,150,0.3067,0.3200,0.3200,0.0000,62,80,"make_call 46 (31%), change_accent 41 (27%), change_user_name 16 (11%), change_ai_name 12 (8%), share_location 11 (7%)",How can I request to be called by a specific name or set a phone call reminder?
+helped,7,"Qwen3-0.6B, old prompt",123,243,0.4115,0.2840,0.2840,0.0000,168,77,"accept_reservations 100 (41%), confirm_reservation 44 (18%), restaurant_reviews 41 (17%), translate 7 (3%), book_hotel 6 (2%)","How would you say ""I am a tourist"" if you were Mongolian?"
+helped,8,"Qwen3-0.6B, old prompt",6,273,0.5238,0.2784,0.2784,0.0000,151,58,"tell_joke 143 (52%), fun_fact 103 (38%), restaurant_reviews 7 (3%), travel_suggestion 6 (2%), definition 3 (1%)",What are some fun facts about the world?
+helped,9,"Qwen3-0.6B, old prompt",27,258,0.5620,0.2752,0.2752,0.0000,82,10,"update_playlist 145 (56%), play_music 95 (37%), share_location 3 (1%), travel_suggestion 3 (1%), change_language 2 (1%)",What is the name of the song currently playing on your speakers?
 helped,10,"Qwen3-1.7B, old prompt",132,153,0.6013,0.2680,0.2680,0.0000,108,51,"text 92 (60%), order_checks 42 (27%), reminder_update 4 (3%), order 3 (2%), replacement_card_duration 3 (2%)","How can I get more checkbooks mailed to me, and what options are available for ordering additional checkbooks by mail?"
-hurt,1,"Qwen3-4B, old prompt",80,132,0.9773,-0.9773,-0.9773,-0.0000,132,129,"roll_dice 129 (98%), calories 1 (1%), fun_fact 1 (1%), restaurant_reservation 1 (1%)",What is a general summary of the cluster of questions?
+hurt,1,"Qwen3-4B, old prompt",80,132,0.9773,-0.9773,-0.9773,0.0000,132,129,"roll_dice 129 (98%), calories 1 (1%), fun_fact 1 (1%), restaurant_reservation 1 (1%)",What is a general summary of the cluster of questions?
 hurt,2,"Qwen3-4B, old prompt",29,131,0.9771,-0.9771,-0.9771,0.0000,111,237,"next_song 128 (98%), play_music 2 (2%), update_playlist 1 (1%)",What are the common ways to request the next song in a playlist?
-hurt,3,"Qwen3-4B, old prompt",15,111,0.9369,-0.9189,-0.9189,-0.0000,16,171,"payday 104 (94%), bill_due 4 (4%), income 2 (2%), next_holiday 1 (1%)",When is my next paycheck scheduled to arrive?
+hurt,3,"Qwen3-4B, old prompt",15,111,0.9369,-0.9189,-0.9189,0.0000,16,171,"payday 104 (94%), bill_due 4 (4%), income 2 (2%), next_holiday 1 (1%)",When is my next paycheck scheduled to arrive?
 hurt,4,"Qwen3-0.6B, old prompt",8,93,0.9140,-0.9032,-0.9032,0.0000,12,144,"how_old_are_you 85 (91%), date 1 (1%), definition 1 (1%), food_last 1 (1%), income 1 (1%)",How old are you?
-hurt,5,"Qwen3-1.7B, old prompt",133,56,0.9643,-0.8929,-0.8929,-0.0000,6,103,"reset_settings 54 (96%), change_volume 1 (2%), whisper_mode 1 (2%)",How can I revert my settings to their original state?
+hurt,5,"Qwen3-1.7B, old prompt",133,56,0.9643,-0.8929,-0.8929,0.0000,6,103,"reset_settings 54 (96%), change_volume 1 (2%), whisper_mode 1 (2%)",How can I revert my settings to their original state?
 hurt,6,"Qwen3-1.7B, old prompt",53,89,0.8876,-0.8876,-0.8876,0.0000,2,226,"change_accent 79 (89%), change_language 8 (9%), translate 1 (1%), whisper_mode 1 (1%)",How can I change my accent to a male British one?
-hurt,7,"Qwen3-0.6B, old prompt",89,81,0.8519,-0.8025,-0.8025,-0.0000,46,152,"schedule_maintenance 69 (85%), tire_change 3 (4%), todo_list 2 (2%), calendar 1 (1%), calendar_update 1 (1%)",Can you schedule a car maintenance check for me?
-hurt,8,"Qwen3-4B, clearer prompt",26,53,0.8113,-0.7736,-0.7736,-0.0000,52,96,"goodbye 43 (81%), greeting 2 (4%), cancel 1 (2%), definition 1 (2%), make_call 1 (2%)",how do i say goodbye in different languages
-hurt,9,"Qwen3-4B, old prompt",20,57,0.7544,-0.6140,-0.6140,-0.0000,54,117,"order 43 (75%), transactions 7 (12%), shopping_list 5 (9%), todo_list 1 (2%), todo_list_update 1 (2%)","What is a general summary of the cluster of questions?  
+hurt,7,"Qwen3-0.6B, old prompt",89,81,0.8519,-0.8025,-0.8025,0.0000,46,152,"schedule_maintenance 69 (85%), tire_change 3 (4%), todo_list 2 (2%), calendar 1 (1%), calendar_update 1 (1%)",Can you schedule a car maintenance check for me?
+hurt,8,"Qwen3-4B, clearer prompt",26,53,0.8113,-0.7736,-0.7736,0.0000,52,96,"goodbye 43 (81%), greeting 2 (4%), cancel 1 (2%), definition 1 (2%), make_call 1 (2%)",how do i say goodbye in different languages
+hurt,9,"Qwen3-4B, old prompt",20,57,0.7544,-0.6140,-0.6140,0.0000,54,117,"order 43 (75%), transactions 7 (12%), shopping_list 5 (9%), todo_list 1 (2%), todo_list_update 1 (2%)","What is a general summary of the cluster of questions?  
 
 **Answer:**  
 The cluster of questions revolves around retrieving, viewing, and ordering items from various lists, including purchases, to-do lists, and shopping lists. The questions involve actions such as displaying all items, organizing them, and placing orders based on the"
-hurt,10,"Qwen3-0.6B, old prompt",11,107,0.6822,-0.5794,-0.5794,-0.0000,106,134,"sync_device 73 (68%), make_call 17 (16%), find_phone 12 (11%), bill_due 2 (2%), change_ai_name 1 (1%)",Can you help me find my iPhone?
+hurt,10,"Qwen3-0.6B, old prompt",11,107,0.6822,-0.5794,-0.5794,0.0000,106,134,"sync_device 73 (68%), make_call 17 (16%), find_phone 12 (11%), bill_due 2 (2%), change_ai_name 1 (1%)",Can you help me find my iPhone?

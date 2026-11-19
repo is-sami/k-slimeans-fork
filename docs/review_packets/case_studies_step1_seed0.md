@@ -23,6 +23,7 @@ The rule was fixed before any text was read and uses numbers only.
   4 on that side, or (first pass) if its cluster id is already on that side. If the first pass cannot fill 10,
   a second pass takes the next-ranked candidates without the distinct-id condition (the cap still holds).
   Equal scores are ordered by run (LSA, 0.6B, 1.7B, 4B, 4B clearer prompt) and then by cluster id.
+- **Rank** is the pick order within a side (pass 1 first, then pass 2), not strictly the score order.
 - **This packet:** helped: extractive (LSA) (1), Qwen3-0.6B, old prompt (4), Qwen3-1.7B, old prompt (1), Qwen3-4B, old prompt (3), Qwen3-4B, clearer prompt (1); hurt: Qwen3-0.6B, old prompt (3), Qwen3-1.7B, old prompt (2), Qwen3-4B, old prompt (4), Qwen3-4B, clearer prompt (1). 0 of the 20 came from the second pass (a repeated cluster id on its side).
 - **Purity ceiling:** a cluster with purity above 0.9 cannot be helped by much (purity cannot exceed 1), so the helped side is
   mostly clusters that were mixed before, and the hurt side is where a pure cluster had room to fall. This selection
@@ -43,7 +44,12 @@ For each cluster, write 3 to 5 lines:
 - a one-line verdict (helped because ..., hurt because ...).
 
 Then add a short paragraph across all 20: what the helped cases have in common, what the hurt ones have in common, and
-**any case that contradicts the synthesis**. Flag those clearly; they matter most. Read `docs/results/synthesis.md`
+**any case that contradicts the synthesis**. Flag those clearly; they matter most.
+
+Check the Arrived list as well: a cluster can be hurt because arrivals change its majority intent, even when few of its own
+members leave (the measure follows the cluster's own members to wherever they end up).
+
+Read `docs/results/synthesis.md`
 section 9 first for context. Deliver `docs/results/synthesis_case_studies.md` in a PR (#50). Don't run anything or change
 the analysis code.
 
@@ -97,7 +103,7 @@ What are the common requests users have for adjusting the speech speed and volum
 ### Helped 2: extractive (LSA), cluster 73
 
 - **Size:** 133 members; **purity before:** 0.53
-- **Selection number:** +0.398 = change in member purity +0.398 minus the no-replacement counterfactual -0.000
+- **Selection number:** +0.398 = change in member purity +0.398 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** insurance 70 (53%), vaccines 51 (38%), insurance\_change 3 (2%), directions 2 (2%), carry\_on 1 (1%)
 
 **Summary**
@@ -298,7 +304,7 @@ What are the current travel alerts for various countries and regions?
 ### Helped 6: Qwen3-4B, clearer prompt, cluster 134
 
 - **Size:** 150 members; **purity before:** 0.31
-- **Selection number:** +0.320 = change in member purity +0.320 minus the no-replacement counterfactual -0.000
+- **Selection number:** +0.320 = change in member purity +0.320 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** make\_call 46 (31%), change\_accent 41 (27%), change\_user\_name 16 (11%), change\_ai\_name 12 (8%), share\_location 11 (7%)
 
 **Summary**
@@ -349,7 +355,7 @@ How can I request to be called by a specific name or set a phone call reminder?
 ### Helped 7: Qwen3-0.6B, old prompt, cluster 123
 
 - **Size:** 243 members; **purity before:** 0.41
-- **Selection number:** +0.284 = change in member purity +0.284 minus the no-replacement counterfactual -0.000
+- **Selection number:** +0.284 = change in member purity +0.284 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** accept\_reservations 100 (41%), confirm\_reservation 44 (18%), restaurant\_reviews 41 (17%), translate 7 (3%), book\_hotel 6 (2%)
 
 **Summary**
@@ -400,7 +406,7 @@ How would you say "I am a tourist" if you were Mongolian?
 ### Helped 8: Qwen3-0.6B, old prompt, cluster 6
 
 - **Size:** 273 members; **purity before:** 0.52
-- **Selection number:** +0.278 = change in member purity +0.278 minus the no-replacement counterfactual -0.000
+- **Selection number:** +0.278 = change in member purity +0.278 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** tell\_joke 143 (52%), fun\_fact 103 (38%), restaurant\_reviews 7 (3%), travel\_suggestion 6 (2%), definition 3 (1%)
 
 **Summary**
@@ -451,7 +457,7 @@ What are some fun facts about the world?
 ### Helped 9: Qwen3-0.6B, old prompt, cluster 27
 
 - **Size:** 258 members; **purity before:** 0.56
-- **Selection number:** +0.275 = change in member purity +0.275 minus the no-replacement counterfactual -0.000
+- **Selection number:** +0.275 = change in member purity +0.275 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** update\_playlist 145 (56%), play\_music 95 (37%), share\_location 3 (1%), travel\_suggestion 3 (1%), change\_language 2 (1%)
 
 **Summary**
@@ -553,7 +559,7 @@ How can I get more checkbooks mailed to me, and what options are available for o
 ### Hurt 1: Qwen3-4B, old prompt, cluster 80
 
 - **Size:** 132 members; **purity before:** 0.98
-- **Selection number:** -0.977 = change in member purity -0.977 minus the no-replacement counterfactual -0.000
+- **Selection number:** -0.977 = change in member purity -0.977 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** roll\_dice 129 (98%), calories 1 (1%), fun\_fact 1 (1%), restaurant\_reservation 1 (1%)
 
 **Summary**
@@ -655,7 +661,7 @@ What are the common ways to request the next song in a playlist?
 ### Hurt 3: Qwen3-4B, old prompt, cluster 15
 
 - **Size:** 111 members; **purity before:** 0.94
-- **Selection number:** -0.919 = change in member purity -0.919 minus the no-replacement counterfactual -0.000
+- **Selection number:** -0.919 = change in member purity -0.919 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** payday 104 (94%), bill\_due 4 (4%), income 2 (2%), next\_holiday 1 (1%)
 
 **Summary**
@@ -757,7 +763,7 @@ How old are you?
 ### Hurt 5: Qwen3-1.7B, old prompt, cluster 133
 
 - **Size:** 56 members; **purity before:** 0.96
-- **Selection number:** -0.893 = change in member purity -0.893 minus the no-replacement counterfactual -0.000
+- **Selection number:** -0.893 = change in member purity -0.893 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** reset\_settings 54 (96%), change\_volume 1 (2%), whisper\_mode 1 (2%)
 
 **Summary**
@@ -847,7 +853,7 @@ How can I change my accent to a male British one?
 ### Hurt 7: Qwen3-0.6B, old prompt, cluster 89
 
 - **Size:** 81 members; **purity before:** 0.85
-- **Selection number:** -0.802 = change in member purity -0.802 minus the no-replacement counterfactual -0.000
+- **Selection number:** -0.802 = change in member purity -0.802 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** schedule\_maintenance 69 (85%), tire\_change 3 (4%), todo\_list 2 (2%), calendar 1 (1%), calendar\_update 1 (1%)
 
 **Summary**
@@ -898,7 +904,7 @@ Can you schedule a car maintenance check for me?
 ### Hurt 8: Qwen3-4B, clearer prompt, cluster 26
 
 - **Size:** 53 members; **purity before:** 0.81
-- **Selection number:** -0.774 = change in member purity -0.774 minus the no-replacement counterfactual -0.000
+- **Selection number:** -0.774 = change in member purity -0.774 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** goodbye 43 (81%), greeting 2 (4%), cancel 1 (2%), definition 1 (2%), make\_call 1 (2%)
 
 **Summary**
@@ -949,7 +955,7 @@ how do i say goodbye in different languages
 ### Hurt 9: Qwen3-4B, old prompt, cluster 20
 
 - **Size:** 57 members; **purity before:** 0.75
-- **Selection number:** -0.614 = change in member purity -0.614 minus the no-replacement counterfactual -0.000
+- **Selection number:** -0.614 = change in member purity -0.614 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** order 43 (75%), transactions 7 (12%), shopping\_list 5 (9%), todo\_list 1 (2%), todo\_list\_update 1 (2%)
 
 **Summary**
@@ -1003,7 +1009,7 @@ The cluster of questions revolves around retrieving, viewing, and ordering items
 ### Hurt 10: Qwen3-0.6B, old prompt, cluster 11
 
 - **Size:** 107 members; **purity before:** 0.68
-- **Selection number:** -0.579 = change in member purity -0.579 minus the no-replacement counterfactual -0.000
+- **Selection number:** -0.579 = change in member purity -0.579 minus the no-replacement counterfactual +0.000
 - **Gold intents before:** sync\_device 73 (68%), make\_call 17 (16%), find\_phone 12 (11%), bill\_due 2 (2%), change\_ai\_name 1 (1%)
 
 **Summary**
