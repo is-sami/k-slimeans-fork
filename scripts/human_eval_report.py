@@ -20,7 +20,7 @@ The report names the raters, the n per dataset and the fixed sample of 40 summar
 `--categories` and the filled CSV(s) to add the counts per category.
 
     python scripts/human_eval_report.py --raters is-sami naween321 --sheets-dir docs/results \\
-        --key-dir results/audit_keys --runs-dir ../k-slimeans/results --cache-dir ../k-slimeans/cache \\
+        --key-dir results/audit_keys --runs-dir results --cache-dir cache \\
         --out-dir results/human_eval
 """
 

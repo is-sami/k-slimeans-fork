@@ -306,17 +306,17 @@ The two raters (`is-sami`, `naween321`) save their filled copies of the blank sh
 
 ```bash
 export HF_HUB_OFFLINE=1
-R=../k-slimeans/results   # the logged runs
+R=results   # the logged runs (run from the repository root)
 python scripts/make_audit_sheet.py $R/clinc150_lsa/20261027-174631 $R/clinc150_qwen3-0.6b/20261027-190908 \
     $R/clinc150_qwen3-1.7b/20261027-202532 $R/clinc150_qwen3-4b/20261027-221042 $R/prelim_bank77_*/* \
     --scores results/summary_quality/summary_quality_per_cluster.csv \
-    --cache-dir ../k-slimeans/cache --out-dir results/audit_regen --write-key results/audit_keys
+    --cache-dir cache --out-dir results/audit_regen --write-key results/audit_keys
 for d in clinc150_intent bank77; do cmp results/audit_regen/summary_audit_sheet_$d.csv docs/results/summary_audit_sheet_$d.csv && echo "$d identical"; done
 python scripts/human_eval_report.py --raters is-sami naween321 --sheets-dir docs/results \
-    --key-dir results/audit_keys --runs-dir $R --cache-dir ../k-slimeans/cache --out-dir results/human_eval
+    --key-dir results/audit_keys --runs-dir $R --cache-dir cache --out-dir results/human_eval
 ```
 
-`--scores` is the per-cluster CSV of section 7 (the October runs give the same sheet with or without the v2 rows). If `cmp` prints a difference, stop: the keys would not match the rated sheets. The report (`results/human_eval/human_eval_report.md`, with CSVs beside it) has, per dataset: the agreement between the raters per property (2 x 2, raw agreement, kappa; for `members_fit` also the Spearman correlation and mean absolute difference of the counts) and the disagreeing rows, listed and not resolved; each rater and the consensus (rows where all raters agree on that property) against the automatic flags; per-method rates for each rater; and the paraphrase check. The script recomputes the unsupported flag from each cluster's full member set and stops if it does not reproduce the key's flag on every row. `paraphrase_flagged_<dataset>.csv` has every flagged summary with its trigger words, numbers and entities and each rater's value; fill its `category` column by hand with one of `paraphrase`, `generalisation`, `inflection_tokenisation`, `unshown_members`, `unsupported`. `paraphrase_reverse_<dataset>.csv` holds the summaries a rater marks unsupported where the flag does not fire, with each summary's words split into those in the shown members, only in members not shown, and in no member. Then add the category counts by running the report again with the same arguments and `--categories results/human_eval/paraphrase_flagged_*.csv` (the filled files). `--sheet-pattern` and `--kind` let the same script run on other raters' sheets, for example the AI raters.
+`--scores` is the per-cluster CSV that the first command of section 7 writes. Keys built from the 11 Nov and the 16 Nov versions of that file are identical (every column of all 80 audit rows, the automatic flags and lemma shares included), and the sheets do not depend on the v2 rows. If `cmp` prints a difference, stop: the keys would not match the rated sheets. The report (`results/human_eval/human_eval_report.md`, with CSVs beside it) has, per dataset: the agreement between the raters per property (2 x 2, raw agreement, kappa; for `members_fit` also the Spearman correlation and mean absolute difference of the counts) and the disagreeing rows, listed and not resolved; each rater and the consensus (rows where all raters agree on that property) against the automatic flags; per-method rates for each rater; and the paraphrase check. The script recomputes the unsupported flag from each cluster's full member set and stops if it does not reproduce the key's flag on every row. `paraphrase_flagged_<dataset>.csv` has every flagged summary with its trigger words, numbers and entities and each rater's value; fill its `category` column by hand with one of `paraphrase`, `generalisation`, `inflection_tokenisation`, `unshown_members`, `unsupported`. `paraphrase_reverse_<dataset>.csv` holds the summaries a rater marks unsupported where the flag does not fire, with each summary's words split into those in the shown members, only in members not shown, and in no member. Then add the category counts by running the report again with the same arguments and `--categories results/human_eval/paraphrase_flagged_*.csv` (the filled files). `--sheet-pattern` and `--kind` let the same script run on other raters' sheets, for example the AI raters.
 
 ### AI-rater stand-in (not a human rating)
 
@@ -386,15 +386,15 @@ The sample is not random over clusters (it is 10 gold intents chosen by recovery
 
 ```bash
 export HF_HUB_OFFLINE=1
-R=../k-slimeans/results   # the logged runs
+R=results   # the logged runs (run from the repository root)
 python scripts/summary_quality.py $R/clinc150_lsa/20261027-174631 $R/clinc150_qwen3-0.6b/20261027-190908 \
     $R/clinc150_qwen3-1.7b/20261027-202532 $R/clinc150_qwen3-4b/20261027-221042 \
     $R/clinc150_v2_qwen3-0.6b/20261112-200926 $R/clinc150_v2_qwen3-1.7b/20261112-204127 \
     $R/clinc150_v2_qwen3-4b/20261112-181256 $R/prelim_bank77_*/* \
-    --cache-dir ../k-slimeans/cache --out-dir results/summary_quality
+    --cache-dir cache --out-dir results/summary_quality
 python scripts/make_audit_sheet.py <the October run dirs above, without the three v2 runs> \
     --scores results/summary_quality/summary_quality_per_cluster.csv \
-    --cache-dir ../k-slimeans/cache --out-dir docs/results --write-key results/audit_keys
+    --cache-dir cache --out-dir docs/results --write-key results/audit_keys
 python scripts/audit_ai_report.py --sheets-dir docs/results --key-dir results/audit_keys \
     --out docs/results/summary_audit_ai_raters.md
 ```
