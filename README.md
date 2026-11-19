@@ -159,7 +159,7 @@ scripts/           smoke_bank77.py, run_offline.py, run_streaming.py, prepare_st
                    verify_cost.py (check a run's logged cost counters),
                    summary_quality.py (per-cluster summary-quality CSV and tables), summary_quality_examples.py (worked examples),
                    synthesis.py (the #50 join, tables and figures: when summaries help or hurt),
-                   make_audit_sheet.py (blinded hand-check sheet and key), audit_agreement.py (hand vs automatic flags), audit_ai_report.py (AI-rater stand-in: agreement and per-method counts),
+                   make_audit_sheet.py (blinded hand-check sheet and key), audit_agreement.py (hand vs automatic flags), audit_ai_report.py (AI-rater stand-in: agreement and per-method counts), human_eval_report.py (scores the human ratings: rater agreement, consensus, paraphrase check),
                    estimate_stream_cost.py (calls and GPU-hours of a streaming summary run, before running it),
                    embed_logged_summaries.py (embed a run's logged summaries once), replacement_diagnostic.py (replay + replacement-diagnostic
                    tables and figures), replacement_sensitivity.py (noise floor of a replacement block),
