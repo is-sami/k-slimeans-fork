@@ -146,3 +146,85 @@ def test_readable_contrast_within_strata_and_with_too_few_clusters():
     assert out["adjustment"] == "bin" and out["diff"] == pytest.approx(0.7)
     few = chain.readable_contrast(_summaries(per_seed=10).query("cluster < 6"), ["lost_share"]).iloc[0]  # 2 fine clusters per seed
     assert np.isnan(few["diff"])
+
+
+def test_fisher_interval_with_five_values_matches_a_hand_value():
+    from scipy import stats
+
+    z = np.arctanh([0.0, 0.9, 0.9, 0.9, 0.4])
+    half = stats.t.ppf(0.975, 4) * z.std(ddof=1) / np.sqrt(5)
+    iv = chain.fisher_interval([0.0, 0.9, 0.9, 0.9, 0.4])
+    assert iv["mean"] == pytest.approx(np.tanh(z.mean()), abs=1e-9)
+    assert iv["lo"] == pytest.approx(np.tanh(z.mean() - half), abs=1e-9) and iv["hi"] == pytest.approx(np.tanh(z.mean() + half), abs=1e-9)
+    assert iv["mean"] == pytest.approx(0.7478, abs=1e-3)  # the within-seed value of synthesis.md section 11 has the same form
+
+
+def _carried_by_one_run():
+    """Four runs, three seeds: run "x" is low on both axes and carries the between-method correlation; the others are flat noise."""
+    rows = []
+    noise = {"a": [(0.0, 0.1), (0.1, 0.0), (0.2, -0.1)], "b": [(0.1, 0.0), (0.0, -0.1), (0.2, 0.1)], "c": [(0.2, 0.1), (0.1, 0.2), (0.0, 0.0)]}
+    for run, vals in noise.items():
+        for seed, (x, y) in enumerate(vals):
+            rows.append({"run": run, "seed": seed, "d_step_acc": x, "d_final_acc": y})
+    for seed in range(3):
+        rows.append({"run": "x", "seed": seed, "d_step_acc": -1.0 - 0.1 * seed, "d_final_acc": -1.0 - 0.1 * seed})
+    return pd.DataFrame(rows)
+
+
+def test_leave_one_out_shows_which_run_carries_the_correlation():
+    out = chain.leave_one_out(_carried_by_one_run()).set_index("scope")
+    assert chain.pair_correlations(_carried_by_one_run()).set_index("scope").loc["pooled", "rho"] > 0.6
+    assert out.loc["without x: pooled", "rho"] < 0.4  # the carrier removed: nothing is left
+    assert out.loc["without a: pooled", "rho"] > 0.6  # another run removed: the carrier still holds
+    assert out.loc["without x: pooled", "n"] == 9 and len(out) == 4 * 3  # pooled, within method, within seed per left-out run
+
+
+def _joined_for_chain(seeds=range(3), n=12):
+    rng = np.random.default_rng(0)
+    rows = []
+    for method in ("m1", "m2"):
+        for seed in seeds:
+            for c in range(n):
+                cov = rng.uniform()
+                rows.append({"method_id": method, "seed": seed, "cluster": c, "step": 1, "has_diag": True, "coverage_nearest": cov,
+                             "specificity_margin": cov - 0.3 + rng.normal(0, 0.1), "unsupported_lemma_share": rng.uniform(),
+                             "drift": 2 - cov + rng.normal(0, 0.1), "own_nearest": float(cov > 0.5), "lost_share": 1 - cov,
+                             "gained_share": rng.uniform(), "purity": rng.uniform(0.2, 1.0), "n_members": 50 + c, "log_n_members": np.log(50 + c),
+                             "d_member_purity": rng.normal(0, 0.05), "d_member_purity_vs_cf": rng.normal(0, 0.05),
+                             "d_member_purity_vs_null": rng.normal(0.1, 0.05), "flag_not_fluent": float(c % 5 == 0),
+                             "flag_low_coverage": float(cov < 0.5), "flag_generic": float(c % 4 == 0)})
+    return pd.DataFrame(rows)
+
+
+def test_build_chain_and_build_readable_on_small_inputs():
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location("synthesis_chain_script", Path(__file__).parents[1] / "scripts" / "synthesis_chain.py")
+    script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(script)
+    df = _joined_for_chain()
+    pairs = pd.DataFrame({"run": ["a"] * 3 + ["b"] * 3 + ["c"] * 3, "seed": [0, 1, 2] * 3, "d_step_acc": np.arange(9.0), "d_final_acc": np.arange(9.0) ** 2})
+    table = script.build_chain(df, pairs)
+    assert {"1 quality to movement", "2 movement to assignment changes", "3 assignment changes to purity change", "4 step-1 partition to final score"} <= set(table["link"])
+    row = table[(table["link"] == "1 quality to movement") & (table["x"] == "coverage_nearest") & (table["y"] == "drift") & (table["controls"] == "none")]
+    assert (row["estimate"] < -0.5).all() and len(row) == 2
+    assert table["stratum"].str.startswith("without a:").sum() >= 3  # leave-one-out rows are written
+    readable = script.build_readable(df)
+    assert set(readable["kind"]) == {"share", "contrast"} and set(readable["method_id"]) == {"m1", "m2"}
+    share = readable[readable["kind"] == "share"].set_index("method_id")
+    assert share.loc["m1", "n_fluent"] == 27 and 0 < share.loc["m1", "share_poor"] <= 1
+
+
+def test_pick_takes_the_largest_gain_and_the_largest_loss_among_fluent_poor_clusters():
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location("examples_script", Path(__file__).parents[1] / "scripts" / "synthesis_chain_examples.py")
+    script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(script)
+    df = pd.DataFrame({"run_config": "r", "seed": 0, "step": 1, "cluster": range(5), "n_members": [60, 60, 60, 60, 10],
+                       "flag_not_fluent": [0.0, 0.0, 0.0, 1.0, 0.0], "flag_low_coverage": 1.0, "flag_generic": 0.0,
+                       "d_member_purity_vs_cf": [0.1, -0.3, 0.4, -0.9, 0.9]})
+    picked = script.pick(df, "r", 0, 50)
+    assert picked["best"]["cluster"] == 2 and picked["worst"]["cluster"] == 1  # 3 is not fluent, 4 is too small

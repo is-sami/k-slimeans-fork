@@ -101,6 +101,18 @@ def pair_correlations(pairs: pd.DataFrame, exclude: tuple[str, ...] = ("clinc150
     return pd.DataFrame(rows)
 
 
+def leave_one_out(pairs: pd.DataFrame) -> pd.DataFrame:
+    """`pair_correlations` with each run left out in turn (`scope` is prefixed `without <run>:`).
+
+    The between-method correlation rests on five methods, so one of them can carry it; this shows which.
+    """
+    parts = []
+    for run in sorted(pairs["run"].unique()):
+        rest = pair_correlations(pairs[pairs["run"] != run], exclude=())
+        parts.append(rest.assign(scope=f"without {run}: " + rest["scope"]))
+    return pd.concat(parts, ignore_index=True)
+
+
 def method_means(pairs: pd.DataFrame) -> pd.DataFrame:
     """Per run: the mean step-1 change, the mean final difference, and the number of seeds with the same sign in both."""
     out = pairs.groupby("run").agg(d_step_acc=("d_step_acc", "mean"), d_final_acc=("d_final_acc", "mean"), n_seeds=("seed", "nunique"))

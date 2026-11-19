@@ -268,6 +268,21 @@ link,scope,method,stratum,x,y,controls,statistic,estimate,lo,hi,n_seeds,n_cluste
 4 step-1 partition to final score,step 1 to final,all five runs,pooled without clinc150_lsa,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.639098,,,5,20
 4 step-1 partition to final score,step 1 to final,all five runs,within method,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",-0.110769,,,5,25
 4 step-1 partition to final score,step 1 to final,all five runs,within seed,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.747851,0.0906892,0.95129,5,5
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_lsa: pooled,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.639098,,,5,20
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_lsa: within method,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",-0.22406,,,5,20
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_lsa: within seed,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.999742,-0.23899,1,5,4
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_qwen3-0.6b: pooled,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.681203,,,5,20
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_qwen3-0.6b: within method,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.0781955,,,5,20
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_qwen3-0.6b: within seed,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.973257,-0.890552,0.999979,5,4
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_qwen3-1.7b: pooled,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.637594,,,5,20
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_qwen3-1.7b: within method,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",-0.133835,,,5,20
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_qwen3-1.7b: within seed,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.965112,-0.929474,0.999977,5,4
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_qwen3-4b: pooled,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.23609,,,5,20
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_qwen3-4b: within method,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",-0.037594,,,5,20
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_qwen3-4b: within seed,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",-0.68168,-0.999954,0.998728,5,4
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_v2_qwen3-4b: pooled,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.625564,,,5,20
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_v2_qwen3-4b: within method,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",-0.186466,,,5,20
+4 step-1 partition to final score,step 1 to final,all five runs,without clinc150_v2_qwen3-4b: within seed,d_step_acc,d_final_acc,none,"spearman over (run, seed) pairs",0.996978,-0.865345,1,5,4
 4 step-1 partition to final score,step 1 to final,clinc150_lsa,method mean,d_step_acc,d_final_acc,none,mean over seeds,0.00505778,,,5,5
 4 step-1 partition to final score,step 1 to final,clinc150_qwen3-0.6b,method mean,d_step_acc,d_final_acc,none,mean over seeds,0.00156444,,,5,5
 4 step-1 partition to final score,step 1 to final,clinc150_qwen3-1.7b,method mean,d_step_acc,d_final_acc,none,mean over seeds,0.0105956,,,5,5

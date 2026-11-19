@@ -51,7 +51,8 @@ def build_chain(step1: pd.DataFrame, pairs: pd.DataFrame) -> pd.DataFrame:
     parts.append(correlation_rows("3 assignment changes to purity change", by_purity))
     rows = pd.concat(parts, ignore_index=True)
 
-    pair_stats = chain.pair_correlations(pairs).rename(columns={"rho": "estimate", "n": "n_clusters"})
+    pair_stats = pd.concat([chain.pair_correlations(pairs), chain.leave_one_out(pairs)], ignore_index=True)
+    pair_stats = pair_stats.rename(columns={"rho": "estimate", "n": "n_clusters"})
     pair_stats = pair_stats.assign(link="4 step-1 partition to final score", method="all five runs", stratum=pair_stats["scope"],
                                    x="d_step_acc", y="d_final_acc", controls="none", statistic="spearman over (run, seed) pairs")  # fmt: skip
     pair_stats["scope"] = "step 1 to final"
