@@ -109,7 +109,7 @@ Notation: `C` is the pre-replacement assignment, `x̄_k` the mean of cluster `k`
 
 **True for fixed assignments.** For any centers `Z`, `J(C, Z) = J(C, X̄) + Σ_k n_k ‖z_k − x̄_k‖²`, so the cluster means minimise `J` for fixed `C`. Replacing the centers `M` by `S` with the assignment kept therefore changes `J` by exactly `Σ_k n_k (‖s_k − x̄_k‖² − ‖m_k − x̄_k‖²)`, which is about `Σ_k n_k ‖s_k − x̄_k‖²` (the size-weighted squared movement of the centers) when `M` are the means. Empty clusters contribute nothing to either sum.
 
-**True after reassignment.** Moving each point to its nearest summary center cannot raise `J`, and no later Lloyd step can raise it. Starting from the raised value the objective can only fall.
+**True after reassignment.** Moving each point to its nearest summary center cannot raise `J`, and no later Lloyd step can raise it. From the raised value the objective can only stay level or fall.
 
 **Not implied: where it ends.** The run that starts from the summary centers and the run that starts from `M` are two Lloyd runs from different starts. They reach different local optima, and either can end with the lower `J`. A lower `J` does not imply a higher ACC or NMI against the gold labels. Nothing about the final objective, or about a score, follows from the identity.
 
@@ -126,7 +126,7 @@ Notation: `C` is the pre-replacement assignment, `x̄_k` the mean of cluster `k`
 | v2 qwen3-4b | 9,567 | +70% | +0.009% | 3/5 / 3/5 |
 
 - Every replacement raises `J` at fixed assignments (the first column, as the identity requires) and Lloyd removes most of the rise within one or two iterations (88% to 97% by iteration 1, all steps, above). After 20 iterations only LSA ends below the objective before the replacement. Against the run without replacement (10,712) LSA ends 0.17% below, the 0.6B and 1.7B 0.35% and 0.18% above, the old 4B 1.4% above, the v2 4B 0.09% above.
-- The 1.7B and the old 4B raise `J` by about the same (+95% and +98% after reassignment) and both end above the no-replacement run in `J` (+0.18% and +1.4%), about eight times apart. Against that run in ACC they end on opposite sides (+0.0106 and −0.0159, section 6). So neither the size of the rise nor the final `J` orders the outcomes, which is what the argument above predicts.
+- The 1.7B and the old 4B raise `J` by about the same (+95% and +98% after reassignment) and both end above the no-replacement run in `J` (+0.18% and +1.4%), about eight times apart. Against that run in ACC they end on opposite sides (+0.0106 and −0.0159, section 6). So neither the size of the rise nor the final `J` orders the outcomes, consistent with the argument above: nothing about a score follows from the objective.
 - Scope: step 1 only (later blocks start from replayed previous blocks and the objective argument is the same, but the table is step 1), five seeds, one dataset.
 
 ## 4. Centroid movement and movers
