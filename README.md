@@ -31,9 +31,10 @@ The paper's method is reproduced exactly. The same settings give the same assign
 8. [Adding a dataset or embedder](#adding-a-dataset-or-embedder)
 9. [Tests](#tests)
 10. [Reproduction status](#reproduction-status)
-11. [Differences from upstream](#differences-from-upstream)
-12. [Working together](#working-together)
-13. [Citation](#citation)
+11. [Results index](#results-index)
+12. [Differences from upstream](#differences-from-upstream)
+13. [Working together](#working-together)
+14. [Citation](#citation)
 
 ---
 
@@ -654,6 +655,41 @@ Checked on an RTX 3060 against the fork of the original code:
   (`tests/test_minibatch.py`).
 - The final `cluster_centers_` can differ in the last float32 bit between *any* two runs, including two runs
   of the original code, because of sklearn's multithreaded Lloyd. Assignments are unaffected.
+
+---
+
+## Results index
+
+Every number we report comes from a write-up in [`docs/results/`](docs/results/). Each write-up names its runs and ends with a
+"Reproduce" section that gives the config and commands behind it. The configs are in [`configs/`](configs/).
+
+| Question | Write-up | Issue |
+| --- | --- | --- |
+| CLINC150: k-means, k-NLPmeans (LSA) and k-SLMmeans with Qwen3 0.6B / 1.7B / 4B | [`clinc150_summarizers.md`](docs/results/clinc150_summarizers.md) | #31 |
+| BANKING77 preliminary comparison | [`prelim_bank77.md`](docs/results/prelim_bank77.md) | #20 |
+| What happens when a summary replaces a centroid (exact replay) | [`replacement_diagnostic.md`](docs/results/replacement_diagnostic.md) | #33 |
+| The objective argument and its numeric check | [`replacement_diagnostic.md`](docs/results/replacement_diagnostic.md) §3, [`replacement_objective_identity.csv`](docs/results/replacement_objective_identity.csv) | #81 |
+| Do the 4B's flagged summaries cause its lower scores? Step-1 swaps | [`counterfactual_swaps.md`](docs/results/counterfactual_swaps.md) | #47 |
+| The same question over all five steps: the guarded run | [`summary_guard.md`](docs/results/summary_guard.md) | #47 |
+| A clearer prompt | [`prompt_test.md`](docs/results/prompt_test.md) | #46 |
+| Summary quality: coverage, genericity, unsupported content, fluency | [`summary_quality.md`](docs/results/summary_quality.md), [`summary_audit_rubric.md`](docs/summary_audit_rubric.md) | #34 |
+| Why the larger model is not better here | [`size_result.md`](docs/results/size_result.md) | #36 |
+| When summaries help or hurt: the synthesis | [`synthesis.md`](docs/results/synthesis.md) (claims and their scope: §10) | #50 |
+| Cost measurements and fixed-workload timing | [`cost_verification.md`](docs/results/cost_verification.md), [`cost_timing.md`](docs/results/cost_timing.md) | #35 |
+| When the extra cost is justified: SLM or extractive summarizer | [`cost_justification.md`](docs/results/cost_justification.md) | #82 |
+| High-dimensional data: BBC News, TF-IDF and dense | [`bbc.md`](docs/results/bbc.md) | #18 |
+| Large scale: arXiv status and pilot | [`arxiv_status.md`](docs/results/arxiv_status.md) | #48 |
+| RQ2: adaptive summary schedule | [`rq2_clinc150.md`](docs/results/rq2_clinc150.md), [`rq2_clinc150_matched.md`](docs/results/rq2_clinc150_matched.md), [`rq2_truncation_check.md`](docs/results/rq2_truncation_check.md) | #15, #28 |
+| November 16 progress summary | [`progress_nov16.md`](docs/results/progress_nov16.md) | #45 |
+
+**Commits:**
+- 8222515 holds the October CLINC150 runs.
+- 341e420 holds the November analyses, which later commits on `main` extend.
+
+**Run outputs:** the raw outputs (`results/`) are not in the repo.
+- They come to about 300 MB of logs and arrays.
+- The BBC outputs include article text we may not redistribute.
+- The tables and per-seed CSVs that the write-ups cite are committed next to them.
 
 ---
 
